@@ -14,11 +14,8 @@ const Login = (props) => {
     });
     let navigate = useNavigate();
     const handleLogin = async () => {
-        console.log(credentials.emailAddress);
-        console.log(credentials.password);
         const response = await login(credentials.emailAddress, credentials.password);
         const data = await response.json();
-        console.log(data);
         if(data.success){
             localStorage.setItem('authToken', data.message);
             props.showAlert("Logged In Successfully!","success");

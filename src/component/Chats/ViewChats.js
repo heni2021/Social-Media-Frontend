@@ -33,33 +33,26 @@ const ViewChats = (props) => {
       navigate("/login");
     } else {
       setProgress(10);
-      console.log(chatId);
-      console.log("Assigning sender and Recievers!");
       assignSenderAndReceiver()
         .catch((error) => {
           console.error('An error occurred:', error);
         })
         .finally(() => {
           setProgress(100);
-          console.log("all set and websocket is coming");
         });
     }
   }, [chatId]);
 
   useEffect(() => {
     setProgress(30);
-    console.log("Fetching profile");
     fetchProfileSource(receiver.profilePhoto);
-    console.log("Fetched profile");
   }, [receiver.profilePhoto]);
 
   useEffect(() => {
     if (chatId && sender.id) {
       setProgress(50);
-      console.log("Fetching previous chats");
       fetchPreviousChats(chatId, sender.id)
         .then(() => {
-          console.log("Fetched Previous chat and executing scrolling");
           scrollToBottom();
           setProgress(90);
         })
@@ -72,9 +65,7 @@ const ViewChats = (props) => {
   // websocket
   useEffect(() => {
     const client = initializeWebSocket(chatId, (response) => {
-      console.log("Received Message:", JSON.parse(response.body));
       const receivedChat = JSON.parse(response.body);
-      console.log("Received Chats: ", receivedChat);
       if (!receivedChat.deletedForever && !receivedChat.edited) {
         setPreviousMessages((prevMessage) => [...prevMessage, receivedChat]);
       }
@@ -97,7 +88,6 @@ const ViewChats = (props) => {
         });
       }
       setNewMessage(true);
-      console.log(previousMessages);
     });
     setStompClient(client);
     return () => {

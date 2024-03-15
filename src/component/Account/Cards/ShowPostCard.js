@@ -86,7 +86,7 @@ const ShowPostCard = (props) => {
     }
 
     const updatePostAgreed = async () => {
-        console.log("Post updated!");
+        ("Post updated!");
         updatePostClose.current.click();
         updateAPost(posts.id, byteArray, desc);
         flipPage.current.click();
@@ -151,7 +151,6 @@ const ShowPostCard = (props) => {
 
     const downloadImage = async () => {
         const mimeType = posts.image.startsWith('/9j/') ? 'jpeg' : 'png';
-        // console.log("Download Homepage called!");
         await download(posts.id, mimeType, userCredentials.userName);
     }
 

@@ -10,7 +10,6 @@ import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
 
 const ShowFriendsCard = (props) => {
     const { userCredentials, showFollowing, unfollow, checkFriend, sendFriendRequest } = props;  
-    console.log("User: ",userCredentials);
     const [formattedRequestDate, setFormattedRequestDate] = useState("");    
     const context = useContext(userContext);
     const { convertTime, user } = context;
@@ -78,7 +77,6 @@ const ShowFriendsCard = (props) => {
     }
     return (
         <div className='my-2'>
-            {/* {console.log(isFriend)} */}
             <Card sx={{minWidth: "1100px"}}>
                 <CardContent>
                     <Grid container alignItems="center">

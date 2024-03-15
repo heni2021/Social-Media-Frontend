@@ -25,7 +25,6 @@ const SignUp = (props) => {
 
     const handleSignUp = async(e) => {
         e.preventDefault();
-        console.log("SignUp Clicked!");
         if(credentials.confirmPassword!==credentials.password){
             props.showAlert("Both the password doesn't match!","danger");
         }

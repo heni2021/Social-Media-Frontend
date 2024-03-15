@@ -11,7 +11,6 @@ const NavBar = (props) => {
         localStorage.removeItem('authToken');
         props.showAlert("Logged Out Successfully!", "success");
         navigate("/login");
-        console.log("going to login page");
     }
 
     const openProfile = (e) => {

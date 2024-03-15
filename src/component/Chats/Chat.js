@@ -28,7 +28,6 @@ const Chat = (props) => {
     }, [chats]);
 
     const fetchAllData = async () => {
-        console.log("Fetching chats data");
         fetchChatsData()
         setProgress(60);
     }

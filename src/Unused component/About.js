@@ -2,7 +2,6 @@ import { Box, Divider } from '@mui/material'
 import PhotoItem from './PhotoItem'
 
 const About = () => {
-  console.log("About: "+localStorage.getItem("authToken"));
   return (
     <>
       <div className="container text-center">

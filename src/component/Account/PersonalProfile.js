@@ -238,14 +238,12 @@ const PersonalProfile = (props) => {
     }
 
     const update = async (e) => {
-        // console.log("update is clicked!");
         refCloseUpdateModal.current.click();
         const response = await updateAccount(user[0]?.id, credentials.firstName, credentials.lastName, credentials.tagLine, credentials.userName);
         const data = await response.json();
         if (data.success) {
             props.showAlert(data.message, "success");
             fetchData(props.id);
-            // setUser(userDetails);
         }
         else {
             props.showAlert(data.message, "danger");
@@ -287,7 +285,6 @@ const PersonalProfile = (props) => {
     const sendFriendRequest = async (receiverId) => {
         const response = await sendRequest(user[0]?.id, receiverId);
         const data = await response.json();
-        // console.log(data);
         if (data.success) {
             props.showAlert(data.message, "success");
         }

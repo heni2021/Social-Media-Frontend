@@ -89,7 +89,6 @@ export default function PostCard(props) {
 
     const downloadImage = async() => {
         const mimeType = postCredentials.image.startsWith('/9j/') ? 'jpeg' : 'png';
-        // console.log("Download Homepage called!");
         await download(postCredentials.id, mimeType, userCredentials.userName);
     }
     return (

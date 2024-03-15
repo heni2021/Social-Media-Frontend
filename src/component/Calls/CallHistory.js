@@ -119,7 +119,6 @@ export default function CallHistory(props) {
             setProgress(94);
             const outData = await resp.json();
             setProgress(100);
-            // console.log(outData);
             setOutgoingCallHistory(outData);
         }
         else {

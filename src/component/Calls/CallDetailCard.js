@@ -32,7 +32,6 @@ const CallDetailIncomingCard = (props) => {
         try {
             const response = await computeDuration(sTime, eTime);
             const data = await response.text();
-            // console.log(data);
             setDuration(data);
         } catch (error) {
             console.error('Error converting time:', error);

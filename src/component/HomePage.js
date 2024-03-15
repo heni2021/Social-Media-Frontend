@@ -104,11 +104,9 @@ const HomePage = (props) => {
       const data = await response.json();
 
       if (data.success) {
-        console.log('Liked:', data);
         getPosts();
         props.showAlert(data.message, "success");
       } else {
-        console.error('Error liking a post:', data);
         props.showAlert(data.message, "danger");
       }
     } catch (error) {
@@ -122,11 +120,9 @@ const HomePage = (props) => {
       const data = await response.json();
 
       if (data.success) {
-        console.log('Disliked:', data);
         getPosts();
         props.showAlert(data.message, "success");
       } else {
-        console.error('Error disliking a post:', data);
         props.showAlert(data.message, "danger");
       }
     } catch (error) {

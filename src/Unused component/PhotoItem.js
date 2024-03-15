@@ -5,7 +5,6 @@ import github from '../Photos/github.png'
 import leetcode from '../Photos/leetcode.jpeg'
 
 const DeveloperPhotos = (props) => {
-    console.log(props.ithub);
     return (
         <div className="developer-photo-container">
             <div className='developer-photo'>

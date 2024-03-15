@@ -13,21 +13,21 @@ const User = (props) => {
   const [creationDates, setCreationDates] = useState([]);
 
   useEffect(() => {
-    if (user) {
+    // if (userDetail.length > 0) {
       peopleRef.current.click();
-    }
-    else {
-      navigate("/login");
-    }
+    // }
+    // else {
+      // navigate("/login");
+    // }
   }, []);
 
   useEffect(() => {
-    if (userDetail.length>0) {
+    // if (userDetail.length>0) {
       fetchDataForUsers();
-    }
-    else {
-      navigate("/login");
-    }
+    // }
+    // else {
+      // navigate("/login");
+    // }
   }, [userDetail]);
   const fetchDataForUsers = async () => {
     try {
@@ -57,19 +57,16 @@ const User = (props) => {
   };
 
   const sendFriendRequest = async (receiverId) => {
-    console.log("friend request for : " + receiverId);
     setProgress(0);
     const response = await sendRequest(user[0]?.id, receiverId);
     setProgress(10);
     const data = await response.json();
     setProgress(40);
-    console.log(data);
     if (data.success) {
       setProgress(60);
       const res = await fetchOtherFriends(user[0]?.id);
       setProgress(80);
       const d = await res.json();
-      console.log(d);
       if (d.length > 0) {
         setUserDetail(d);
         setProgress(100);

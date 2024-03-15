@@ -29,7 +29,6 @@ const ShowLikes = (props) => {
 
     useEffect(() => {
         const storedLikePressed = localStorage.getItem("likePressed") === "true"; // Convert to boolean
-        console.log(storedLikePressed);
         setLikePressed(storedLikePressed);
         fetchPostById();
     }, []);
@@ -71,7 +70,6 @@ const ShowLikes = (props) => {
             }));
             setProgress(90);
             setLikesUserData(userData);
-            console.log(userData);
         }
         setProgress(100);
     };
@@ -96,7 +94,6 @@ const ShowLikes = (props) => {
             }));
             setProgress(90);
             setDownloadUserData(userData);
-            console.log(userData);
         }
         setProgress(100);
     };

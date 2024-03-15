@@ -24,5 +24,4 @@ export const initializeWebSocket = (chatId, onMessageReceived) => {
 
 export const closeWebSocket = () => {
     stompClient && stompClient.deactivate();
-    console.log('WebSocket disconnected');
 };

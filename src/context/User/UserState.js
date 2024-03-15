@@ -451,7 +451,6 @@ const UserState = (props) => {
                 'auth-token': localStorage.getItem("authToken")
             },
         });
-        // console.log(response.json());
         return response;
     }
 
@@ -474,7 +473,6 @@ const UserState = (props) => {
                 'auth-token': localStorage.getItem("authToken")
             },
         });
-        // console.log(response.json());
         return response;
     }
 
@@ -486,19 +484,16 @@ const UserState = (props) => {
                 'auth-token': localStorage.getItem("authToken")
             },
         });
-        // console.log(response.json());
         return response;
     }
 
     const computeDuration = async(startTime, endTime) => {
-        // console.log("Hello");
         const response = await fetch(`${computeDurationUrl}/${startTime}/${endTime}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }
         });
-        // setUser([await response.json()]);
         return response;
     }
 
@@ -509,7 +504,6 @@ const UserState = (props) => {
                 'Content-Type': 'application/json'
             }
         });
-        // setUser([await response.json()]);
         return response;
     }
 
@@ -531,7 +525,6 @@ const UserState = (props) => {
                 'auth-token': localStorage.getItem("authToken")
             },
         });
-        // console.log(response.json());
         return response;
     }
 
@@ -543,7 +536,6 @@ const UserState = (props) => {
                 'auth-token': localStorage.getItem("authToken")
             },
         });
-        // console.log(response.json());
         return response;
     }
     const getUserDetails = async() => {
@@ -606,7 +598,6 @@ const UserState = (props) => {
 
     // Fetch other friends
     const fetchOtherFriends = async(id) =>{
-        // console.log("HELLO: "+id);
         const response = await fetch(`${fetchOther}/${id}`, {
             method: 'GET',
             headers: {
@@ -614,7 +605,6 @@ const UserState = (props) => {
                 'auth-token': localStorage.getItem("authToken")
             }
         });
-        // setUser([await response.json()]);
         return response;
     }
 
