@@ -108,6 +108,7 @@ code {
   transform: rotateY(180deg);
   z-index: 1;
 }
+
 /* Add styling for sender and receiver messages as needed */
 .sender-message {
   background-color: #DCF8C6;
