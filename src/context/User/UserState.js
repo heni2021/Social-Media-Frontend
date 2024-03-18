@@ -64,6 +64,18 @@ const UserState = (props) => {
     const searchUserUrl = process.env.REACT_APP_SEARCH_URL;
     const clearChatUrl = process.env.REACT_APP_CLEAR_CHATS;
     const deleteAllChatsUrl = process.env.REACT_APP_DELETE_CHATS;
+    const forwardMsgUrl = process.env.REACT_APP_FORWARD_CHATS;
+
+    const forwardMsg = async(chatId, msgId, id) => {
+        const response = await fetch(`${forwardMsgUrl}/${chatId}/${msgId}/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': localStorage.getItem("authToken"),
+            },
+        });
+        return response;
+    }
 
     const clearChat = async(chatId, id)=>{
         const response = await fetch(`${clearChatUrl}/${chatId}/${id}`, {
@@ -610,7 +622,7 @@ const UserState = (props) => {
 
 
     return (
-        <UserContext.Provider value={{ setStatus, status, clearChat, deleteChat, searchUser, deleteMessage, canDeleteMsg, editMessage, deleteMessageForever, convertDateAndTime,getAllChatsById, setChatId, chatId, getChats, getPostById, setPostId, postId, setProfilePhoto, downloadPost, isLiked, likePost, dislikePost, getAllByFollowing, updatePost, deletePost, getAllPost, addPost, peopleRef, friendRef, unfollowFriend, deleteAccount, updateAccount, fetchFollowing, fetchFollowers, isFriend, ignoreFriendRequest, acceptFriendRequest, cancelFriendRequest, fetchOutgoingFriendRequest, fetchIncomingFriendRequest, sendRequest, incomingFriendRequest, outgoingFriendRequest, setIncomingFriendRequest,setOutgoingFriendRequest,clearCallById, clearIncomingCalls, clearOutgoingCallHistory, clearAllCalls, setOutgoingCallHistory, outgoingCallHistory, setCallUserData, convertTime, fetchOutgoingCalls,callUserData, computeDuration, login, signup, callHistory, fetchUserDetails,setCallHistory, fetchIncomingCalls, resetPassword, setUserDetail, logOut, userDetail, fetchOtherFriends, getUserDetails, setUser, user }}>
+        <UserContext.Provider value={{ forwardMsg, setStatus, status, clearChat, deleteChat, searchUser, deleteMessage, canDeleteMsg, editMessage, deleteMessageForever, convertDateAndTime,getAllChatsById, setChatId, chatId, getChats, getPostById, setPostId, postId, setProfilePhoto, downloadPost, isLiked, likePost, dislikePost, getAllByFollowing, updatePost, deletePost, getAllPost, addPost, peopleRef, friendRef, unfollowFriend, deleteAccount, updateAccount, fetchFollowing, fetchFollowers, isFriend, ignoreFriendRequest, acceptFriendRequest, cancelFriendRequest, fetchOutgoingFriendRequest, fetchIncomingFriendRequest, sendRequest, incomingFriendRequest, outgoingFriendRequest, setIncomingFriendRequest,setOutgoingFriendRequest,clearCallById, clearIncomingCalls, clearOutgoingCallHistory, clearAllCalls, setOutgoingCallHistory, outgoingCallHistory, setCallUserData, convertTime, fetchOutgoingCalls,callUserData, computeDuration, login, signup, callHistory, fetchUserDetails,setCallHistory, fetchIncomingCalls, resetPassword, setUserDetail, logOut, userDetail, fetchOtherFriends, getUserDetails, setUser, user }}>
             {props.children}
         </UserContext.Provider>
     )

@@ -1,15 +1,16 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import userContext from '../../context/User/UserContext';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import { Avatar, Divider, Fade, IconButton, MenuItem, Slide, Tooltip } from '@mui/material';
+import { Avatar, Divider, Fade, IconButton, MenuItem, Paper, Slide, Tooltip } from '@mui/material';
 import Popover from '@mui/material/Popover';
 import PopupState, { bindTrigger, bindPopover } from 'material-ui-popup-state';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
+import StartAChatComponent from './StartAChatComponent';
 
 const ShowMessage = (props) => {
     const { message, receiver, formatTime, newMsg, showAlert, performEditting } = props;
     const context = useContext(userContext);
-    const { user, deleteMessageForever, canDeleteMsg, deleteMessage } = context;
+    const { user, deleteMessageForever, canDeleteMsg, deleteMessage, forwardMsg } = context;
     const [time, setTime] = useState("");
     const [showAnimation, setShowAnimation] = useState(true);
     const [canPerformOps, setCanPerformOps] = useState(true);
@@ -84,6 +85,7 @@ const ShowMessage = (props) => {
 
     const ForwardMessage = (e) => {
         e.close();
+        openForwardModal.current.click();
     }
 
     const handleDeleteMessageForever = async (e) => {
@@ -97,9 +99,33 @@ const ShowMessage = (props) => {
             showAlert(data.message, "danger");
         }
     }
+    const openForwardModal = useRef(null);
+    const closeForwardModel = useRef(null);
 
     return (
         <>
+            <button  ref={openForwardModal} hidden type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#forwardMessageModal">
+                Launch demo modal
+            </button>
+            <div style={{ width: 1000 }} class="modal fade" id="forwardMessageModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content" style={{ width: 700 }}>
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Forward Message</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <Paper elevation={3} sx={{ height: 400, width: 650, overflow: "auto" }}>
+                                <StartAChatComponent closeChattingModal={closeForwardModel} />
+                            </Paper>
+                        </div>
+                        <div class="modal-footer">
+                            <button ref={closeForwardModel} type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Send Message</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             {isMessageVisible ?
                 <>
                     {!newMsg ?
