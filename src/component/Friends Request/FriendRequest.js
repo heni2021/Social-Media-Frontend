@@ -59,7 +59,6 @@ const FriendRequest = (props) => {
             }));
             setProgress(90);
             setUserCredentials(combinedData);
-            setProgress(100);
         }
 
         fetchPendingRequest();
@@ -67,11 +66,11 @@ const FriendRequest = (props) => {
 
     useEffect(() => {
         const fetchSentRequest = async () => {
-            setProgress(10);
+            // setProgress(10);
             const userDetailPromises = await outgoingFriendRequest.map((friendRequests) => fetchData(friendRequests.receiverId));
-            setProgress(40);
+            // setProgress(40);
             const userDetails = await Promise.all(userDetailPromises);
-            setProgress(60)
+            // setProgress(60)
             const combinedData = userDetails.map((userDetail, index) => ({
                 userCredentials: {
                     userName: userDetail.userName,

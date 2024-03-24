@@ -68,6 +68,7 @@ function App() {
             <Route path='/viewRequests' element={<FriendRequest showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
             <Route path='/viewProfile' element={<ViewProfile showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
             <Route path='/view' element={<Navigate to='/viewProfile' />} />
+            <Route path='/goToChat' element={<Navigate to='/chat'/>} />
             <Route path='/accountDetails' element={<PersonalAccountDetails showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
             <Route path='/addPost' element={<Post showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
             <Route path='/showUser' element={<ShowLikes showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />

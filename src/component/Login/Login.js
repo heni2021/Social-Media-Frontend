@@ -9,8 +9,8 @@ const Login = (props) => {
     const context = useContext(userContext);
     const {login} = context;
     const [credentials, setCredentials] = useState({
-        emailAddress: "",
-        password: ""
+        emailAddress: "priyal.shah@gmail.com",
+        password: "Priyal@12345"
     });
     let navigate = useNavigate();
     const handleLogin = async () => {

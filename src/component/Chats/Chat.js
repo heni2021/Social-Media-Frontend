@@ -24,12 +24,13 @@ const Chat = (props) => {
     useEffect(() => {
         setProgress(60);
         fetchDataFromChats();
-        setProgress(100);
+        setProgress(70);
     }, [chats]);
 
     const fetchAllData = async () => {
-        fetchChatsData()
-        setProgress(60);
+        setProgress(80);
+        fetchChatsData();
+        setProgress(100);
     }
 
     const fetchData = async (id) => {
@@ -41,7 +42,6 @@ const Chat = (props) => {
             console.error('An error occurred during fetchData:', error);
         }
     };
-
 
     const fetchChatsData = async () => {
         try {
@@ -99,25 +99,24 @@ const Chat = (props) => {
     return (
         <>
             <BottomNavigationBar showAlert={props.showAlert} value={'chat'} />
-            <button ref={openStartChatModal} hidden type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#startAChatModal">
+            <button ref={openStartChatModal} hidden type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#startAChatModal">
                 Launch demo modal
             </button>
 
-            <div style={{width: 1000}}class="modal fade" id="startAChatModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content" style={{width: 700}}>
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Start Chatting .... </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div style={{width: 1000}}className="modal fade" id="startAChatModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div className="modal-dialog">
+                    <div className="modal-content" style={{width: 700}}>
+                        <div className="modal-header">
+                            <h5 className="modal-title" id="exampleModalLabel">Start Chatting .... </h5>
+                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body">
+                        <div className="modal-body">
                             <Paper elevation={3} sx={{height: 400, width: 650, overflow: "auto"}}>
                                 <StartAChatComponent closeChattingModal={closeChattingModal} />
                             </Paper>
                         </div>
-                        <div class="modal-footer">
-                            <button hidden ref = {closeChattingModal} type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            {/* <button type="button" class="btn btn-primary">Save changes</button> */}
+                        <div className="modal-footer">
+                            <button hidden ref = {closeChattingModal} type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>

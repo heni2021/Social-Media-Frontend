@@ -1,4 +1,4 @@
-import { Avatar, Card, CardActions, CardContent, CardHeader, Chip, Grid, IconButton, Tooltip } from '@mui/material';
+import { Avatar, Badge, Card, CardActions, CardContent, CardHeader, Chip, Grid, IconButton, Tooltip } from '@mui/material';
 import React, { useEffect, useRef } from 'react';
 import FaceIcon from '@mui/icons-material/Face';
 import { useState } from 'react';
@@ -6,18 +6,38 @@ import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import userContext from '../../context/User/UserContext';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { Face } from '@mui/icons-material';
 
 const ChatPersonalDetailCard = (props) => {
     const { users, chat, showAlert } = props;
     const context = useContext(userContext);
-    const { user, setChatId, deleteChat, chatId } = context;
+    const { user, setChatId, deleteChat, chatId, countUnreadMsg } = context;
     const [imageUrl, setImageUrl] = useState(null);
     const [showChatCard, setShowChatCard] = useState(true);
+    const [unreadCount, setUnreadCount ] = useState("0");
     const initials = users.firstName.charAt(0).toUpperCase() + users.lastName.charAt(0).toUpperCase();
     const status = users.status.toLowerCase();
+
     useEffect(() => {
         fetchProfileSource(users.profile);
-    }, [users]);
+    }, [users, users.profile]);
+
+    useEffect(() => {
+        findChatIDForCount();
+    },[users]);
+
+    const findChatIDForCount = async() => {
+        const sortedIds = [users.id, user[0]?.id].sort();
+        const id = sortedIds.join('_');
+        const response = await countUnreadMsg(id, user[0]?.id);
+        const data = await response.json();
+        if(data.success){
+            setUnreadCount(data.message);
+        }
+        else{
+            showAlert(data.message, "danger");
+        }
+    }
 
     const fetchProfileSource = (image) => {
         if (image) {
@@ -27,10 +47,10 @@ const ChatPersonalDetailCard = (props) => {
         }
     }
 
-    const generateChatId = (receiverId, senderId) => {
+    const generateChatId = async(receiverId, senderId) => {
         const sortedIds = [receiverId, senderId].sort();
         const id = sortedIds.join('_');
-        setChatId(id);
+        await setChatId(id);
     }
 
     const navigate = useNavigate();
@@ -41,10 +61,12 @@ const ChatPersonalDetailCard = (props) => {
 
     const deleteAChat = async () => {
         generateChatId(users.id, user[0]?.id);
+        console.log(chatId);
         const response = await deleteChat(chatId, user[0]?.id);
         const data = await response.json();
         if (data.success) {
-            setShowChatCard(false);
+            // setShowChatCard(false);
+            navigate("/goToChat");
             showAlert(data.message, "success");
         }
         else {
@@ -149,7 +171,21 @@ const ChatPersonalDetailCard = (props) => {
                                         title={
                                             <>
 
-                                                <h5 style={{ fontSize: 25 }}>{users.firstName + " " + users.lastName} <Chip sx={{ backgroundColor: "lightgreen" }} icon={<FaceIcon />} label={users.userName} /></h5>
+                                                {   unreadCount!=='0'? 
+                                                    <Tooltip title="Unread Messages">
+                                                <Badge badgeContent={unreadCount} color="secondary">
+                                                <h5 style={{ fontSize: 25 }}>{users.firstName + " " + users.lastName} <Chip sx={{ backgroundColor: "lightgreen" }} icon={
+                                                <FaceIcon />
+                                                } label={users.userName} /></h5>
+                                                </Badge>
+                                                </Tooltip>
+                                                :
+                                                    // :<Badge badgeContent={unreadCount} color="secondary">
+                                                <h5 style={{ fontSize: 25 }}>{users.firstName + " " + users.lastName} <Chip sx={{ backgroundColor: "lightgreen" }} icon={
+                                                <FaceIcon />
+                                                } label={users.userName} /></h5>
+                                                // </Badge>
+                                                }
                                             </>
                                         }
                                         subheader={chat.content}
@@ -162,6 +198,17 @@ const ChatPersonalDetailCard = (props) => {
                                                 <DeleteIcon />
                                             </IconButton>
                                         </Tooltip>
+                                        {/* {unreadCount !== '0' &&
+                                            <Grid item xs={2}>
+                                                <CardActions>
+                                                    <Tooltip title="Unread Messages">
+                                                            <FaceIcon />
+
+                                                        </Badge>
+                                                    </Tooltip>
+                                                </CardActions>
+                                            </Grid>
+                                        } */}
                                     </CardActions>
                                 </Grid>
                             </Grid>

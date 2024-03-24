@@ -73,10 +73,10 @@ export default function UserDetailCard(props) {
         generateChatId(props.userId, user[0]?.id);
         navigate("/viewChats");
     }
-    const generateChatId = (receiverId, senderId) => {
+    const generateChatId = async(receiverId, senderId) => {
         const sortedIds = [receiverId, senderId].sort();
         const id = sortedIds.join('_');
-        setChatId(id);
+        await setChatId(id);
     }
 
     return (

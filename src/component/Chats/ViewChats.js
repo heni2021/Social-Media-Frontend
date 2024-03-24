@@ -1,4 +1,4 @@
-import { Avatar, Card, CardActions, CardContent, CardHeader, Chip, Grid, IconButton, LinearProgress, Paper, TextField, Tooltip } from '@mui/material';
+import { Avatar, Card, CardActions, CardContent, CardHeader, Chip, Divider, Grid, IconButton, LinearProgress, Paper, TextField, Tooltip } from '@mui/material';
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import FaceIcon from '@mui/icons-material/Face';
@@ -6,15 +6,15 @@ import userContext from '../../context/User/UserContext';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ShowMessage from './ShowMessage';
-import CircularWithValueLabel from '../CircularWithValueLabel';
 import { closeWebSocket, initializeWebSocket } from '../WebSocketService';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
+import { set } from 'date-fns';
 
 const ViewChats = (props) => {
   const { setProgress, progress, showProgress, showAlert } = props;
 
   const context = useContext(userContext);
-  const { fetchUserDetails, user, chatId, getAllChatsById, convertDateAndTime, editMessage, clearChat } = context;
+  const { updateAccessTime, fetchUserDetails, user, chatId, getAllChatsById, convertDateAndTime, editMessage, clearChat, countUnreadMsg } = context;
   const { setStatus, status } = context;
   const [receiver, setReceiver] = useState({});
   const [sender, setSender] = useState({});
@@ -25,6 +25,8 @@ const ViewChats = (props) => {
   const [newMessage, setNewMessage] = useState(false);
   const [stompClient, setStompClient] = useState(null);
   const [isEditBox, setIsEditBox] = useState(false);
+  const [unreadCount, setUnreadCount] = useState("0");
+  const [dividerIndex, setDividerIndex] = useState(0);
   const [messageId, setMessageId] = useState("");
   const paperRef = useRef(null);
 
@@ -33,26 +35,36 @@ const ViewChats = (props) => {
       navigate("/login");
     } else {
       setProgress(10);
+      // console.log(chatId);
+      // console.log("Assigning sender and Recievers!");
       assignSenderAndReceiver()
         .catch((error) => {
           console.error('An error occurred:', error);
         })
         .finally(() => {
           setProgress(100);
+          // console.log("all set and websocket is coming");
         });
     }
   }, [chatId]);
 
   useEffect(() => {
     setProgress(30);
+    // console.log("Fetching profile");
     fetchProfileSource(receiver.profilePhoto);
+    // console.log("Fetched profile");
   }, [receiver.profilePhoto]);
 
   useEffect(() => {
     if (chatId && sender.id) {
       setProgress(50);
-      fetchPreviousChats(chatId, sender.id)
+      // console.log("Fetching previous chats");
+      countUnreadMessages()
         .then(() => {
+          fetchPreviousChats(chatId, sender.id)
+        })
+        .then(() => {
+          // console.log("Fetched Previous chat and executing scrolling");
           scrollToBottom();
           setProgress(90);
         })
@@ -66,20 +78,26 @@ const ViewChats = (props) => {
   useEffect(() => {
     const client = initializeWebSocket(chatId, (response) => {
       const receivedChat = JSON.parse(response.body);
-      if (!receivedChat.deletedForever && !receivedChat.edited) {
+      // console.log(previousMessages);
+      if (!receivedChat.deletedForever && !receivedChat.edited && !receivedChat.forwarded) {
         setPreviousMessages((prevMessage) => [...prevMessage, receivedChat]);
       }
       else {
         setPreviousMessages((prevMessages) => {
           return prevMessages.map((msg) => {
             if (msg.messageId === receivedChat.messageId) {
-              // Replace the content and set isDeletedForever to true
               return {
-                ...msg,
+                chatId: receivedChat.chatId,
                 content: receivedChat.content,
                 deletedForever: receivedChat.deletedForever,
+                deletedMessageUserId: receivedChat.deletedMessageUserId,
                 edited: receivedChat.edited,
-                timeStamp: receivedChat.timeStamp,
+                forwarded: receivedChat.forwarded,
+                id: receivedChat.id,
+                messageId: receivedChat.messageId,
+                receiverId: receivedChat.receiverId,
+                senderId: receivedChat.senderId,
+                timeStamp: receivedChat.timeStamp
               };
             } else {
               return msg;
@@ -88,6 +106,7 @@ const ViewChats = (props) => {
         });
       }
       setNewMessage(true);
+      // console.log(previousMessages);
     });
     setStompClient(client);
     return () => {
@@ -104,10 +123,23 @@ const ViewChats = (props) => {
   const initials = (receiver.firstName && receiver.firstName.charAt(0).toUpperCase()) + (receiver.lastName && receiver.lastName.charAt(0).toUpperCase());
   const userStatus = receiver.status ? receiver.status.toLowerCase() : '';
 
+  const countUnreadMessages = async () => {
+    const response = await countUnreadMsg(chatId, user[0]?.id);
+    const data = await response.json();
+    if (data.success) {
+      setUnreadCount(data.message);
+    }
+    else {
+      showAlert(data.message, "danger");
+    }
+  }
+
   const fetchPreviousChats = async (chatId, id) => {
     const response = await getAllChatsById(chatId, id);
     const data = await response.json();
     setPreviousMessages(data);
+    // const index = previousMessages.length - (unreadCount - '0');
+    // setDividerIndex(index);
   }
   const assignSenderAndReceiver = async () => {
     setSender(user[0]);
@@ -162,9 +194,9 @@ const ViewChats = (props) => {
     }
   }, [previousMessages]);
 
-  const sendMessage = (isEdited) => {
+  const sendMessage = async (isEdited) => {
     setMessage("");
-    if(user[0]?.id === receiver.id){
+    if (user[0]?.id === receiver.id) {
       setStatus(userStatus);
     }
     if (!isEdited) {
@@ -186,15 +218,22 @@ const ViewChats = (props) => {
       }
     }
     else {
-      perfomEditOperation(chatId, messageId, sender.id);
+      await perfomEditOperation(chatId, messageId, sender.id);
       setIsEditBox(false);
       setMessageId("");
     }
   }
 
-  const goToViewCard = (event) => {
+  const goToViewCard = async (event) => {
     event.stopPropagation();
-    navigate("/chat");
+    const response = await updateAccessTime(chatId, sender.id);
+    const data = await response.json();
+    if (data.success) {
+      navigate("/chat");
+    }
+    else {
+      showAlert(data.message, "danger");
+    }
   }
 
   const clear_Chats = async (event) => {
@@ -237,10 +276,10 @@ const ViewChats = (props) => {
     }
   }
 
-  const performEditting = (messageId, msgContent) => {
-    setIsEditBox(true);
-    setMessageId(messageId);
-    setMessage(msgContent);
+  const performEditting = async (messageId, msgContent) => {
+    await setIsEditBox(true);
+    await setMessageId(messageId);
+    await setMessage(msgContent);
   }
 
   const deleteRefOpen = useRef(null);
@@ -272,15 +311,14 @@ const ViewChats = (props) => {
           </div>
         </div>
       </div>
-      {showProgress && <LinearProgress variant="determinate" value={progress} sx={{ color: "red" }} />}
+      {/* {showProgress && <LinearProgress variant="determinate" value={progress} sx={{ color: "red" }} />} */}
       <div className='container mx-3'>
-        {/* <Button variant='outlined' onClick={goToViewCard}>Return</Button> */}
-        {showProgress && <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
+        {/* {showProgress && <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
           {showProgress && <CircularWithValueLabel value={progress} />}
-        </div>}
+        </div>} */}
 
-        {!showProgress && <Paper elevation={3} sx={{ width: 1100, minHeight: 450 }}>
-          {/* {<Paper elevation={3} sx={{ width: 1100, minHeight: 450 }}> */}
+        {/* {!showProgress && <Paper elevation={3} sx={{ width: 1100, minHeight: 450 }}> */}
+        {<Paper elevation={3} sx={{ width: 1100, minHeight: 450 }}>
           {/*For user profile */}
           <Card sx={{ minWidth: "1020px", cursor: "pointer" }} onClick={openViewUserInterface}>
             <CardContent>
@@ -376,7 +414,7 @@ const ViewChats = (props) => {
                           }} />
                         )}
                         <span style={{ marginLeft: '5px' }}>
-                          {status==='typing'? 'Typing' : userStatus === 'online' ? 'Online' : 'Offline'}
+                          {status === 'typing' ? 'Typing' : userStatus === 'online' ? 'Online' : 'Offline'}
                         </span>
                       </div>
                     }
@@ -404,9 +442,19 @@ const ViewChats = (props) => {
                   .slice()
                   .sort((a, b) => a.timeStamp - b.timeStamp)
                   .map((msg, index) => {
-                    return (
-                      <ShowMessage receiver={receiver} newMsg={newMessage} performEditting={performEditting} showAlert={showAlert} key={index} message={msg} formatTime={formatTime} />
-                    )
+                    // if (index === dividerIndex) {
+                    //   return (
+                    //     <>
+                    //     <Divider />
+                    //     <ShowMessage receiver={receiver} newMsg={newMessage} performEditting={performEditting} showAlert={showAlert} key={index} message={msg} formatTime={formatTime} />
+                    //     </>
+                    //   )
+                    // }
+                    // else {
+                      return (
+                        <ShowMessage receiver={receiver} newMsg={newMessage} performEditting={performEditting} showAlert={showAlert} key={index} message={msg} formatTime={formatTime} />
+                      )
+                    // }
                   })}
 
               </>
@@ -427,6 +475,7 @@ const ViewChats = (props) => {
             <Tooltip title='Send Message'>
               <span>
                 <IconButton disabled={message.length === 0} onClick={() => {
+                  console.log("Current - ", isEditBox);
                   sendMessage(isEditBox);
                 }}>
                   {message.length === 0 ?

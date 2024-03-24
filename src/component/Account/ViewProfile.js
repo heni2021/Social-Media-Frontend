@@ -305,10 +305,10 @@ const ViewProfile = (props) => {
         }
     };
 
-    const generateChatId = (receiverId, senderId) => {
+    const generateChatId = async(receiverId, senderId) => {
         const sortedIds = [receiverId, senderId].sort();
         const id = sortedIds.join('_');
-        setChatId(id);
+        await setChatId(id);
     }
 
     const startChatting = () => {

@@ -16,6 +16,7 @@ const UserState = (props) => {
     const[postId, setPostId] = useState("");
     const[chatId, setChatId] = useState("");
     const[status, setStatus] = useState("");
+    const[messageId, setMessageId] = useState("");
 
     const fetchLoginUrl = process.env.REACT_APP_LOGIN_URL;
     const fetchSignupUrl = process.env.REACT_APP_SIGNUP_URL;
@@ -65,9 +66,33 @@ const UserState = (props) => {
     const clearChatUrl = process.env.REACT_APP_CLEAR_CHATS;
     const deleteAllChatsUrl = process.env.REACT_APP_DELETE_CHATS;
     const forwardMsgUrl = process.env.REACT_APP_FORWARD_CHATS;
+    const accessTimeUrl = process.env.REACT_APP_UPDATE_CHAT_ACCESS_TIME;
+    const unreadMsgUrl = process.env.REACT_APP_COUNT_UNREAD_MSGS;
 
-    const forwardMsg = async(chatId, msgId, id) => {
-        const response = await fetch(`${forwardMsgUrl}/${chatId}/${msgId}/${id}`, {
+    const updateAccessTime = async(chatId, id)=>{
+        const response = await fetch(`${accessTimeUrl}/${chatId}/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': localStorage.getItem("authToken"),
+            },
+        });
+        return response;
+    }
+
+    const countUnreadMsg = async(chatId, id)=>{
+        const response = await fetch(`${unreadMsgUrl}/${chatId}/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': localStorage.getItem("authToken"),
+            },
+        });
+        return response;
+    }
+
+    const forwardMsg = async(destChatId, chatId, msgId, id) => {
+        const response = await fetch(`${forwardMsgUrl}/${destChatId}/${chatId}/${msgId}/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -559,7 +584,7 @@ const UserState = (props) => {
             },
         });
         const data = await response.json();
-        setUser([data]);    
+        await setUser([data]);    
     }
 
     const login = async (emailAddress, password) => {
@@ -622,7 +647,9 @@ const UserState = (props) => {
 
 
     return (
-        <UserContext.Provider value={{ forwardMsg, setStatus, status, clearChat, deleteChat, searchUser, deleteMessage, canDeleteMsg, editMessage, deleteMessageForever, convertDateAndTime,getAllChatsById, setChatId, chatId, getChats, getPostById, setPostId, postId, setProfilePhoto, downloadPost, isLiked, likePost, dislikePost, getAllByFollowing, updatePost, deletePost, getAllPost, addPost, peopleRef, friendRef, unfollowFriend, deleteAccount, updateAccount, fetchFollowing, fetchFollowers, isFriend, ignoreFriendRequest, acceptFriendRequest, cancelFriendRequest, fetchOutgoingFriendRequest, fetchIncomingFriendRequest, sendRequest, incomingFriendRequest, outgoingFriendRequest, setIncomingFriendRequest,setOutgoingFriendRequest,clearCallById, clearIncomingCalls, clearOutgoingCallHistory, clearAllCalls, setOutgoingCallHistory, outgoingCallHistory, setCallUserData, convertTime, fetchOutgoingCalls,callUserData, computeDuration, login, signup, callHistory, fetchUserDetails,setCallHistory, fetchIncomingCalls, resetPassword, setUserDetail, logOut, userDetail, fetchOtherFriends, getUserDetails, setUser, user }}>
+        <UserContext.Provider value={{ 
+            countUnreadMsg, updateAccessTime, setMessageId, messageId, forwardMsg, setStatus, status, clearChat, deleteChat, searchUser, deleteMessage, canDeleteMsg, editMessage, deleteMessageForever, convertDateAndTime,getAllChatsById, setChatId, chatId, getChats, getPostById, setPostId, postId, setProfilePhoto, downloadPost, isLiked, likePost, dislikePost, getAllByFollowing, updatePost, deletePost, getAllPost, addPost, peopleRef, friendRef, unfollowFriend, deleteAccount, updateAccount, fetchFollowing, fetchFollowers, isFriend, ignoreFriendRequest, acceptFriendRequest, cancelFriendRequest, fetchOutgoingFriendRequest, fetchIncomingFriendRequest, sendRequest, incomingFriendRequest, outgoingFriendRequest, setIncomingFriendRequest,setOutgoingFriendRequest,clearCallById, clearIncomingCalls, clearOutgoingCallHistory, clearAllCalls, setOutgoingCallHistory, outgoingCallHistory, setCallUserData, convertTime, fetchOutgoingCalls,callUserData, computeDuration, login, signup, callHistory, fetchUserDetails,setCallHistory, fetchIncomingCalls, resetPassword, setUserDetail, logOut, userDetail, fetchOtherFriends, getUserDetails, setUser, user
+            }}>
             {props.children}
         </UserContext.Provider>
     )

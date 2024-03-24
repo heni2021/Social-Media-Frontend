@@ -1,20 +1,24 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import userContext from '../../context/User/UserContext';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import { Avatar, Divider, Fade, IconButton, MenuItem, Paper, Slide, Tooltip } from '@mui/material';
+import { Avatar, Chip, Divider, Fade, IconButton, MenuItem, Paper, Slide, Tooltip } from '@mui/material';
 import Popover from '@mui/material/Popover';
+import userContext from '../../context/User/UserContext'
 import PopupState, { bindTrigger, bindPopover } from 'material-ui-popup-state';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
-import StartAChatComponent from './StartAChatComponent';
+import StartAforwardChat from './ForwardMessageCards/StartAforwardChat';
 
 const ShowMessage = (props) => {
     const { message, receiver, formatTime, newMsg, showAlert, performEditting } = props;
     const context = useContext(userContext);
-    const { user, deleteMessageForever, canDeleteMsg, deleteMessage, forwardMsg } = context;
+    const { user, deleteMessageForever, canDeleteMsg, deleteMessage, setMessageId } = context;
     const [time, setTime] = useState("");
     const [showAnimation, setShowAnimation] = useState(true);
     const [canPerformOps, setCanPerformOps] = useState(true);
     const [isMessageVisible, setIsMessageVisible] = useState(true);
+
+    useEffect(() => {
+        console.log("Message : ",message);
+    },[]);
 
     useEffect(() => {
         convertAndFormatTime(message.timeStamp);
@@ -83,8 +87,9 @@ const ShowMessage = (props) => {
         }
     }
 
-    const ForwardMessage = (e) => {
+    const ForwardMessage = async (e) => {
         e.close();
+        await setMessageId(message.messageId);
         openForwardModal.current.click();
     }
 
@@ -94,7 +99,6 @@ const ShowMessage = (props) => {
         const data = await response.json();
         if (data.success) {
             showAlert(data.message, "success");
-            message.deletedForever = true;
         } else {
             showAlert(data.message, "danger");
         }
@@ -107,41 +111,41 @@ const ShowMessage = (props) => {
             <button  ref={openForwardModal} hidden type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#forwardMessageModal">
                 Launch demo modal
             </button>
-            <div style={{ width: 1000 }} class="modal fade" id="forwardMessageModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content" style={{ width: 700 }}>
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Forward Message</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <Paper elevation={3} sx={{ height: 400, width: 650, overflow: "auto" }}>
-                                <StartAChatComponent closeChattingModal={closeForwardModel} />
-                            </Paper>
-                        </div>
-                        <div class="modal-footer">
-                            <button ref={closeForwardModel} type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary">Send Message</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
             {isMessageVisible ?
                 <>
+                    <div style={{ width: 1000 }} class="modal fade" id="forwardMessageModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content" style={{ width: 700 }}>
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Forward Message</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <Paper elevation={3} sx={{ height: 400, width: 650, overflow: "auto" }}>
+                                        <StartAforwardChat closeChattingModal={closeForwardModel} />
+                                    </Paper>
+                                </div>
+                                <div class="modal-footer">
+                                    <button ref={closeForwardModel} type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     {!newMsg ?
                         <>
                             <Slide in={showAnimation} direction="up" timeout={{ enter: 500, exit: 0 }}>
                                 <div className={`message-box ${messageClass} my-1 mx-2`} style={{ position: 'relative' }}>
                                     {message.deletedForever ?
                                         <>
-                                            <div>
+                                            {/* <div>
                                                 {isSender ?
                                                     <p style={{ marginLeft: 7, position: 'absolute', left: 0, color: 'purple' }}>You</p> :
                                                     <p style={{ marginLeft: 7, position: 'absolute', left: 0, color: 'purple' }}>{`${receiver.firstName} ${receiver.lastName}`}</p>
                                                 }
                                             </div>
                                             <br />
-                                            <Divider style={{ width: '100%' }} />
+                                            <Divider style={{ width: '100%' }} /> */}
                                             <div className="message-content" style={{ fontStyle: 'italic', paddingRight: '30px' }}>
                                                 {message.content}
                                             </div>
@@ -174,14 +178,14 @@ const ShowMessage = (props) => {
                                         </>
                                         :
                                         <>
-                                            <div>
+                                            {/* <div>
                                                 {isSender ?
                                                     <p style={{ marginLeft: 7, position: 'absolute', left: 0, color: 'purple' }}>You</p> :
                                                     <p style={{ marginLeft: 7, position: 'absolute', left: 0, color: 'purple' }}>{`${receiver.firstName} ${receiver.lastName}`}</p>
                                                 }
                                             </div>
                                             <br />
-                                            <Divider style={{ width: '100%' }} />
+                                            <Divider style={{ width: '100%' }} /> */}
                                             <div className="message-content" style={{ paddingRight: '30px' }}>
                                                 {message.content}
                                             </div>
@@ -235,11 +239,11 @@ const ShowMessage = (props) => {
                                         {
                                             message.edited ?
                                                 <p style={{ alignItems: "right", display: "flex", justifyContent: "right", fontSize: 12 }}>
-                                                    Edited &nbsp;<AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    {message.forwarded ? <Chip size='12px' color='success' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip> : <></>} Edited &nbsp;<AccessTimeIcon sx={{ fontSize: 17 }} />{time}
                                                 </p>
                                                 :
                                                 <p style={{ alignItems: "right", display: "flex", justifyContent: "right", fontSize: 12 }}>
-                                                    <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    {message.forwarded ? <Chip size = '12px' color='success' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip> : <></>} <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
                                                 </p>
                                         }
 
@@ -250,11 +254,11 @@ const ShowMessage = (props) => {
                                         {
                                             message.edited ?
                                                 <p style={{ alignItems: "left", display: "flex", justifyContent: "left", fontSize: 12 }}>
-                                                    Edited &nbsp; <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    {message.forwarded ? <Chip size='12px' color='success' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip>: <></>} Edited &nbsp; <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
                                                 </p>
                                                 :
                                                 <p style={{ alignItems: "left", display: "flex", justifyContent: "left", fontSize: 12 }}>
-                                                    <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    {message.forwarded ? <Chip size='12px' color='success' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip> : <></>} <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
                                                 </p>
                                         }
                                     </Slide>
@@ -267,14 +271,14 @@ const ShowMessage = (props) => {
                                 <div className={`message-box ${messageClass} my-1 mx-2`} style={{ position: 'relative' }}>
                                     {message.deletedForever ?
                                         <>
-                                            <div>
+                                            {/* <div>
                                                 {isSender ?
                                                     <p style={{ marginLeft: 7, position: 'absolute', left: 0, color: 'purple' }}>You</p> :
                                                     <p style={{ marginLeft: 7, position: 'absolute', left: 0, color: 'purple' }}>{`${receiver.firstName} ${receiver.lastName}`}</p>
                                                 }
                                             </div>
                                             <br />
-                                            <Divider style={{ width: '100%' }} />
+                                            <Divider style={{ width: '100%' }} /> */}
                                             <div className="message-content" style={{ fontStyle: 'italic', paddingRight: '30px' }}>
                                                 {message.content}
                                             </div>
@@ -307,14 +311,14 @@ const ShowMessage = (props) => {
                                         </>
                                         :
                                         <>
-                                            <div>
+                                            {/* <div>
                                                 {isSender ?
                                                     <p style={{ marginLeft: 7, position: 'absolute', left: 0, color: 'purple' }}>You</p> :
                                                     <p style={{ marginLeft: 7, position: 'absolute', left: 0, color: 'purple' }}>{`${receiver.firstName} ${receiver.lastName}`}</p>
                                                 }
                                             </div>
                                             <br />
-                                            <Divider style={{ width: '100%' }} />
+                                            <Divider style={{ width: '100%' }} /> */}
                                             <div className="message-content" style={{ paddingRight: '30px' }}>
                                                 {message.content}
                                             </div>
@@ -368,11 +372,11 @@ const ShowMessage = (props) => {
                                         {
                                             message.edited ?
                                                 <p style={{ alignItems: "right", display: "flex", justifyContent: "right", fontSize: 12 }}>
-                                                    Edited &nbsp;<AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    {message.forwarded ? <Chip color='success' size='12px' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip> : <></>} Edited &nbsp;<AccessTimeIcon sx={{ fontSize: 17 }} />{time}
                                                 </p>
                                                 :
                                                 <p style={{ alignItems: "right", display: "flex", justifyContent: "right", fontSize: 12 }}>
-                                                    <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    {message.forwarded ? <Chip color='success' size='12px' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip> : <></>} <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
                                                 </p>
                                         }
                                     </Fade>
@@ -382,11 +386,11 @@ const ShowMessage = (props) => {
                                         {
                                             message.edited ?
                                                 <p style={{ alignItems: "left", display: "flex", justifyContent: "left", fontSize: 12 }}>
-                                                    Edited &nbsp; <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    {message.forwarded ? <Chip color='success' size='12px' label={"Forwarded"} sx={{fontSize:12}}></Chip> : <></>} Edited &nbsp; <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
                                                 </p>
                                                 :
                                                 <p style={{ alignItems: "left", display: "flex", justifyContent: "left", fontSize: 12 }}>
-                                                    <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    {message.forwarded ? <Chip color='success' size='12px' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip> : <></>} <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
                                                 </p>
                                         }
                                     </Fade>
