@@ -15,7 +15,7 @@ import ShowPostCard from './Cards/ShowPostCard';
 const ViewProfile = (props) => {
     const context = useContext(userContext);
     const {fetchUserDetails, sendRequest, user, isFriend, convertTime, fetchFollowing, fetchFollowers } = context;
-    const { isLiked, dislikePost, getAllPost, likePost, downloadPost, setChatId } = context;
+    const { isLiked, dislikePost, getAllPost, likePost, downloadPost, setChatId, startCall, setRoomId } = context;
     const [userDetails, setUserDetail] = useState({
         userName: '',
         firstName: '',
@@ -311,6 +311,25 @@ const ViewProfile = (props) => {
         await setChatId(id);
     }
 
+    const startVideoCall = () => {
+        const name = userDetails.firstName+" "+userDetails.lastName;
+        console.log(name);
+        localStorage.setItem("Name", name);
+        startAVideoCall(userDetails.id, user[0]?.id);
+    }
+
+    const startAVideoCall = async (receiverId, senderId) => {
+        const response = await startCall(senderId, receiverId);
+        const data = await response.json();
+        if (data.success) {
+            await setRoomId(data.message);
+            navigate("/videoCall");
+        }
+        else {
+            props.showAlert(data.message, "danger");
+        }
+    }
+
     const startChatting = () => {
         generateChatId(userDetails.id, user[0]?.id);
         navigate("/viewChats");
@@ -422,8 +441,8 @@ const ViewProfile = (props) => {
                             {friend ? <></> :
                                 <Button className='mx-3' variant="contained" sx={{ width: "200px" }} startIcon={<PersonAddIcon />} onClick={sendFriendRequest}> Add to Friend </Button>
                             }
-                            {friend ? <Button className='mx-3' variant="contained" sx={{ width: "250px" }} startIcon={<VideocamIcon />}> Start a Video Call </Button> :
-                                <Button variant="contained" sx={{ width: "250px" }} startIcon={<VideocamIcon />}> Start a Video Call </Button>}
+                            {friend ? <Button className='mx-3' variant="contained" sx={{ width: "250px" }} startIcon={<VideocamIcon />} onClick={startVideoCall}> Start a Video Call </Button> :
+                                <Button variant="contained" sx={{ width: "250px" }} startIcon={<VideocamIcon />} onClick={startVideoCall}> Start a Video Call </Button>}
                         </div>
                         <Divider className='my-3' sx={{ width: '1200px' }} />
                         <Typography>

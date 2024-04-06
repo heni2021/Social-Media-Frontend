@@ -127,6 +127,7 @@ const User = (props) => {
                 profile={userData.profilePhoto}
                 convertTime={convertTime}
                 sendFriendRequest={sendFriendRequest}
+                showAlert={props.showAlert}
               />
             );
           })}

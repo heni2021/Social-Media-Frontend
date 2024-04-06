@@ -1,5 +1,7 @@
+import SockJS from "sockjs-client";
 import UserContext from "./UserContext";
 import { React, useRef, useState } from 'react';
+import { Stomp } from "@stomp/stompjs";
 const UserState = (props) => {
 
     const peopleRef = useRef(null);
@@ -17,6 +19,10 @@ const UserState = (props) => {
     const[chatId, setChatId] = useState("");
     const[status, setStatus] = useState("");
     const[messageId, setMessageId] = useState("");
+    const[stompClient, setStompClient] = useState(null);
+    const[roomId, setRoomId] = useState("default");
+    const[receiverDetails, setReceiverDetails] = useState({});
+    const[chats, setChats] = useState([]);
 
     const fetchLoginUrl = process.env.REACT_APP_LOGIN_URL;
     const fetchSignupUrl = process.env.REACT_APP_SIGNUP_URL;
@@ -68,6 +74,101 @@ const UserState = (props) => {
     const forwardMsgUrl = process.env.REACT_APP_FORWARD_CHATS;
     const accessTimeUrl = process.env.REACT_APP_UPDATE_CHAT_ACCESS_TIME;
     const unreadMsgUrl = process.env.REACT_APP_COUNT_UNREAD_MSGS;
+    const startVideoCallUrl = process.env.REACT_APP_START_VIDEO_CALL_SUBSCRIBE;
+    const videoCallUrl = process.env.REACT_APP_VIDEO_CALL_SUBSCRIBE;
+    const sockJsUrl = process.env.REACT_APP_SOCKJS_URL;
+    const brokerUrl = process.env.REACT_APP_WEBSOCKET_URL;
+    const startCallUrl = process.env.REACT_APP_START_VIDEO_CALL;
+    const endCallUrl = process.env.REACT_APP_END_VIDEO_CALL;
+    const answerCallUrl = process.env.REACT_APP_ANSWER_VIDEO_CALL;
+    const startVoiceCallUrl = process.env.REACT_APP_VOICE_CALL_SUBSCRIBE;
+    const voiceCallUrl = process.env.REACT_APP_VOICE_CALL;
+    const startVoiceUrl = process.env.REACT_APP_START_VOICE_CALL;
+    const answerVoiceCallUrl = process.env.REACT_APP_ANSWER_VOICE_CALL;
+    const endVoiceCallUrl = process.env.REACT_APP_END_VOICE_CALL;
+
+    const startVoiceCall = async(userId, receiverId) => {
+        const response = await fetch(`${startVoiceUrl}/${userId}/${receiverId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': localStorage.getItem("authToken"),
+            },
+        });
+        return response;
+    }
+
+    const answerVoiceCall = async(userId, roomId) => {
+        const response = await fetch(`${answerVoiceCallUrl}/${userId}/${roomId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': localStorage.getItem("authToken"),
+            },
+        });
+        return response;
+    }
+
+    const endVoiceCall = async(userId, receiverId, roomId) => {
+        const response = await fetch(`${endVoiceCallUrl}/${userId}/${receiverId}/${roomId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': localStorage.getItem("authToken"),
+            },
+        });
+        return response;
+    }
+
+    const startCall = async(userId, receiverId) => {
+        const response = await fetch(`${startCallUrl}/${userId}/${receiverId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': localStorage.getItem("authToken"),
+            },
+        });
+        return response;
+    }
+
+    const answerCall = async(receiverId, roomId) => {
+        const response = await fetch(`${answerCallUrl}/${receiverId}?roomId=${roomId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': localStorage.getItem("authToken"),
+            },
+        });
+        return response;
+    }
+
+    const endCall = async(userId, receiverId) => {
+        const response = await fetch(`${endCallUrl}/${userId}/${receiverId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': localStorage.getItem("authToken"),
+            },
+        });
+        return response;
+    }
+
+    const setUpWebSocket = async (url, onMessageReceived ) =>{
+        const socket = new SockJS(sockJsUrl);
+        let sc =  Stomp.over(socket);
+        sc.configure({
+            brokerURL:brokerUrl,
+            onConnect: () => {
+                const destination = url;
+                sc.subscribe(destination, onMessageReceived);
+            },
+            onStompError: (error) => {
+                console.error('WebSocket error:', error);
+            },
+        });
+        sc.activate();
+        setStompClient(sc);
+    }
 
     const updateAccessTime = async(chatId, id)=>{
         const response = await fetch(`${accessTimeUrl}/${chatId}/${id}`, {
@@ -648,7 +749,7 @@ const UserState = (props) => {
 
     return (
         <UserContext.Provider value={{ 
-            countUnreadMsg, updateAccessTime, setMessageId, messageId, forwardMsg, setStatus, status, clearChat, deleteChat, searchUser, deleteMessage, canDeleteMsg, editMessage, deleteMessageForever, convertDateAndTime,getAllChatsById, setChatId, chatId, getChats, getPostById, setPostId, postId, setProfilePhoto, downloadPost, isLiked, likePost, dislikePost, getAllByFollowing, updatePost, deletePost, getAllPost, addPost, peopleRef, friendRef, unfollowFriend, deleteAccount, updateAccount, fetchFollowing, fetchFollowers, isFriend, ignoreFriendRequest, acceptFriendRequest, cancelFriendRequest, fetchOutgoingFriendRequest, fetchIncomingFriendRequest, sendRequest, incomingFriendRequest, outgoingFriendRequest, setIncomingFriendRequest,setOutgoingFriendRequest,clearCallById, clearIncomingCalls, clearOutgoingCallHistory, clearAllCalls, setOutgoingCallHistory, outgoingCallHistory, setCallUserData, convertTime, fetchOutgoingCalls,callUserData, computeDuration, login, signup, callHistory, fetchUserDetails,setCallHistory, fetchIncomingCalls, resetPassword, setUserDetail, logOut, userDetail, fetchOtherFriends, getUserDetails, setUser, user
+            setChats, chats,answerVoiceCall, voiceCallUrl, startVoiceCall, startVoiceCallUrl, startVoiceUrl, answerVoiceCallUrl, endVoiceCallUrl, setReceiverDetails, receiverDetails, setRoomId, roomId, startCall, endCall, answerCall, setUpWebSocket, startVideoCallUrl, videoCallUrl, stompClient, setStompClient, countUnreadMsg, updateAccessTime, setMessageId, messageId, forwardMsg, setStatus, status, clearChat, deleteChat, searchUser, deleteMessage, canDeleteMsg, editMessage, deleteMessageForever, convertDateAndTime, getAllChatsById, setChatId, chatId, getChats, getPostById, setPostId, postId, setProfilePhoto, downloadPost, isLiked, likePost, dislikePost, getAllByFollowing, updatePost, deletePost, getAllPost, addPost, peopleRef, friendRef, unfollowFriend, deleteAccount, updateAccount, fetchFollowing, fetchFollowers, isFriend, ignoreFriendRequest, acceptFriendRequest, cancelFriendRequest, user, setUser, fetchOutgoingFriendRequest, fetchIncomingFriendRequest, sendRequest, incomingFriendRequest, outgoingFriendRequest, setIncomingFriendRequest, setOutgoingFriendRequest, clearCallById, clearIncomingCalls, clearOutgoingCallHistory, clearAllCalls, setOutgoingCallHistory, outgoingCallHistory, setCallUserData, convertTime, fetchOutgoingCalls, callUserData, computeDuration, login, signup, callHistory, fetchUserDetails, setCallHistory, fetchIncomingCalls, resetPassword, setUserDetail, logOut, userDetail, fetchOtherFriends, getUserDetails, endVoiceCall
             }}>
             {props.children}
         </UserContext.Provider>

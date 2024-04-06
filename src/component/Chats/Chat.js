@@ -17,20 +17,20 @@ const Chat = (props) => {
     const [chatUserDetail, setChatUserDetail] = useState([]);
 
     useEffect(() => {
-        setProgress(10);
+        // setProgress(10);
         fetchAllData();
     }, [user]);
 
     useEffect(() => {
-        setProgress(60);
+        // setProgress(60);
         fetchDataFromChats();
-        setProgress(70);
+        // setProgress(70);
     }, [chats]);
 
     const fetchAllData = async () => {
-        setProgress(80);
+        // setProgress(80);
         fetchChatsData();
-        setProgress(100);
+        // setProgress(100);
     }
 
     const fetchData = async (id) => {
@@ -46,9 +46,9 @@ const Chat = (props) => {
     const fetchChatsData = async () => {
         try {
             const response = await getChats(user[0]?.id);
-            setProgress(30);
+            // setProgress(30);
             const data = await response.json();
-            setProgress(50);
+            // setProgress(50);
             setChats(data);
         } catch (error) {
             console.error('An error occurred during fetchChats:', error);

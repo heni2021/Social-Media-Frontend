@@ -25,7 +25,7 @@ export default function BottomNavigationBar(props) {
 
     const context = React.useContext(userContext);
     const { user, setUserDetail, setCallHistory, fetchIncomingCalls, setOutgoingCallHistory, fetchOutgoingCalls, fetchOtherFriends, logOut } = context;
-    const { fetchIncomingFriendRequest, fetchOutgoingFriendRequest, setIncomingFriendRequest, setOutgoingFriendRequest, } = context;
+    const { fetchIncomingFriendRequest, fetchOutgoingFriendRequest, setIncomingFriendRequest, setOutgoingFriendRequest, stompClient } = context;
     const { setPosts,friendRef, peopleRef } = context;
 
     const fetchData = async (e) => {
@@ -84,11 +84,16 @@ export default function BottomNavigationBar(props) {
             localStorage.removeItem("previousLink");
             localStorage.removeItem("likePressed");
             props.showAlert("Logged Out Successfully!", "success");
+            closeWebSocket();
             navigate("/login");
         }
         else {
             props.showAlert("Some Error Occured!", "danger");
         }
+    }
+
+    const closeWebSocket = () => {
+        stompClient && stompClient.deactivate();
     }
 
     const addNewPost = () => {

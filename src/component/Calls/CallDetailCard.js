@@ -5,9 +5,12 @@ import CallReceivedIcon from '@mui/icons-material/CallReceived';
 import CallMadeIcon from '@mui/icons-material/CallMade';
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded'; 
 import DeleteIcon from '@mui/icons-material/Delete';
+import PhoneIcon from '@mui/icons-material/Phone';
+import RingVolumeIcon from '@mui/icons-material/RingVolume';
+import CallMissedIcon from '@mui/icons-material/CallMissed';
 
 const CallDetailIncomingCard = (props) => {
-    const { userCredentials, time, endTime, incoming, deleteHistory, id } = props;
+    const { userCredentials, time, endTime, incoming, deleteHistory, id , voiceCall, answered} = props;
     const context = useContext(userContext);
     const { convertTime, computeDuration } = context;
 
@@ -147,19 +150,26 @@ const CallDetailIncomingCard = (props) => {
                             subheader={
                                 <>
                                     {incoming ?
-                                        <CallReceivedIcon />
+                                        endTime!==null ? (answered ? <CallReceivedIcon sx={{color: "green"}}/>  : <CallMissedIcon sx={{color: "red"}}/>) : <RingVolumeIcon sx={{color: 'green'}}  />
                                         :
-                                        <CallMadeIcon />}{endTime !== null ? formattedStartTime : formattedStartTime + " Ongoing"}
+                                        <CallMadeIcon sx={{color: "green"}}/>}
+                                        &nbsp;{endTime !== null ? formattedStartTime : answered ? formattedStartTime + " Ongoing" : formattedStartTime +" Ringing..."}
                                     <br />
-                                    <HistoryRoundedIcon /> {endTime !== null ? (
+                                    {answered ? (
                                         <>
-                                            {hours !== 0 && `${hours} hrs `}
-                                            {minutes !== 0 && `${minutes} min `}
-                                            {seconds !== 0 && `${seconds} sec `}
+                                            <HistoryRoundedIcon /> &nbsp;
+                                            {endTime !== null ? (
+                                                <>
+                                                    {hours !== 0 && `${hours} hrs `}
+                                                    {minutes !== 0 && `${minutes} min `}
+                                                    {seconds !== 0 && `${seconds} sec `}
+                                                </>
+                                            ) : (
+                                                " Ongoing "
+                                            )}
                                         </>
                                     ) : (
                                         <>
-                                            {" Ongoing "}
                                         </>
                                     )}
                                 </>
@@ -174,6 +184,13 @@ const CallDetailIncomingCard = (props) => {
                                     <DeleteIcon sx={{ fontSize: 30 }} />
                                 </IconButton>
                             </Tooltip>
+                            {voiceCall && 
+                            <Tooltip title='Voice Call'>
+                                <IconButton>
+                                    <PhoneIcon sx={{fontSize: 30}} />
+                                </IconButton>
+                            </Tooltip>
+                            }
                         </CardActions>
                     </Grid>
                 </Grid>

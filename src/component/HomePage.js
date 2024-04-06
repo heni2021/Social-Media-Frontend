@@ -1,23 +1,31 @@
 import React, { useContext, useEffect, useState } from 'react';
 import BottomNavigationBar from './BottomNavigation';
 import userContext from '../context/User/UserContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import PostCard from './Posts/PostCard';
 import { Button, LinearProgress } from '@mui/material';
 import ArrowCircleRightRoundedIcon from '@mui/icons-material/ArrowCircleRightRounded';
 
 const HomePage = (props) => {
-  const {showProgress,progress, setProgress} = props;
+  const { showProgress, progress, setProgress } = props;
   const context = useContext(userContext);
-  const { getUserDetails, getAllByFollowing, user, downloadPost, fetchUserDetails, convertTime, likePost, dislikePost, isLiked } = context;
+  const { getUserDetails, getAllByFollowing, user, downloadPost,fetchUserDetails, convertTime, likePost, dislikePost, isLiked, setUpWebSocket, startVoiceCallUrl, stompClient, setRoomId, setReceiverDetails, roomId, setChats } = context;
   const [posts, setPosts] = useState({});
   const [userPostCredentials, setUserPostCredentials] = useState([]);
+  const [isExecuted, setIsExecuted] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    setProgress(30);
-    fetchUserData();
-    setProgress(100);
-  }, [user]);
+    // if (!isExecuted) {
+      setProgress(30);
+      fetchUserData()
+      setProgress(100);
+      setIsExecuted(true);
+    // }
+    return () => {
+      closeWebSocket();
+    };
+  }, []);
 
   useEffect(() => {
     // setProgress(89);
@@ -27,12 +35,50 @@ const HomePage = (props) => {
     // setProgress(100);
   }, [posts]);
 
+  const closeWebSocket = () => {
+    stompClient && stompClient.deactivate();
+  };
+
+
+  const configureWebSocket = async () => {
+    if (user) {
+      const url = `${startVoiceCallUrl}/${user[0]?.id}`;
+      await setUpWebSocket(url, async (response) => {
+        const receivedResponse = JSON.parse(response.body);
+        if (receivedResponse.success && roomId === "default" && receivedResponse.message === "Calling") {
+          await setRoomId(receivedResponse.roomId);
+          if (receivedResponse.receiverId !== user[0]?.id) {
+            const receiver = await fetchData(receivedResponse.receiverId);
+            await setReceiverDetails(receiver);
+          }
+          else {
+            const receiver = await fetchData(receivedResponse.callerId);
+            await setReceiverDetails(receiver);
+          }
+        }
+        if (receivedResponse.success && receivedResponse.message === "Calling") {
+          navigate("/voice/call/incoming");
+        }
+        if (receivedResponse.success && receivedResponse.message === "Answering") {
+          navigate("/voice/call/receive");
+        }
+        if (receivedResponse.success && receivedResponse.message === 'Ended') {
+          await setChats([]);
+          navigate("/people");
+        }
+      });
+    }
+  }
+
   const fetchUserData = async () => {
     await getUserDetails()
       .then(async () => {
         // setProgress(40);
-        await getPosts()
+        await getPosts();
         // setProgress(80);
+      })
+      .then(async () => {
+        await configureWebSocket();
       })
       .catch(error => console.error('Error fetching user details:', error));
   }
@@ -180,7 +226,7 @@ const HomePage = (props) => {
       console.error('Error fetching image:', error);
     }
   };
-  const navigate = useNavigate();
+
   const goToPeople = () => {
     navigate("/people");
   }

@@ -1,7 +1,7 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
 import Login from './component/Login/Login';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import Alert from './component/Alert';
 import UserState from './context/User/UserState';
 import SignUp from './component/Login/SignUp';
@@ -21,10 +21,13 @@ import PersonalAccountDetails from './component/Account/PersonalAccountDetails';
 import Post from './component/Posts/Post';
 import ShowLikes from './component/LikesShow/ShowLikes';
 import { useEffect } from 'react';
-import { LinearProgress } from '@mui/material';
 import Chat from './component/Chats/Chat';
 import ViewChats from './component/Chats/ViewChats';
 import Search from './component/Search Functionality/Search';
+import VideoCall from './component/Video Call/VideoCall';
+import OutgoingVoiceCall from './component/Voice Call/OutgoingVoiceCall';
+import IncomingVoiceCall from './component/Voice Call/IncomingVoiceCall';
+import AcceptVoiceCall from './component/Voice Call/AcceptVoiceCall';
 
 function App() {
   const theme = createTheme(); // for material Ui
@@ -75,6 +78,10 @@ function App() {
             <Route path='/chat' element={<Chat showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
             <Route path='/viewChats' element={<ViewChats showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
             <Route path='/search' element={<Search showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
+            <Route path='/videoCall' element={<VideoCall showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
+            <Route path='/voice/call' element={<OutgoingVoiceCall showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
+            <Route path='/voice/call/incoming' element={<IncomingVoiceCall showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
+            <Route path='/voice/call/receive' element={<AcceptVoiceCall showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
           </Routes>
         </ThemeProvider>
       </Router>

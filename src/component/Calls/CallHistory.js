@@ -54,7 +54,9 @@ export default function CallHistory(props) {
                     callDetails: {
                         time: callHistory[index].startTime,
                         endTime: callHistory[index].endTime,
-                        id: callHistory[index].id
+                        id: callHistory[index].id,
+                        voiceCall: callHistory[index].voiceCall,
+                        answered: callHistory[index].answered
                     }
                 }));
                 setProgress(90);
@@ -89,7 +91,9 @@ export default function CallHistory(props) {
                     callDetails: {
                         time: outgoingCallHistory[index].startTime,
                         endTime: outgoingCallHistory[index].endTime,
-                        id: outgoingCallHistory[index].id
+                        id: outgoingCallHistory[index].id,
+                        voiceCall: outgoingCallHistory[index].voiceCall,
+                        answered: outgoingCallHistory[index].answered
                     }
                 }));
                 setProgress(90);
@@ -254,6 +258,8 @@ export default function CallHistory(props) {
                                         incoming={true}
                                         id={data.callDetails.id}
                                         showAlert={props.showAlert}
+                                        voiceCall={data.callDetails.voiceCall}
+                                        answered={data.callDetails.answered}
                                         deleteHistory={deleteHistory}
                                     />
                                 )) : <p className=' text-center' style={{ color: "grey" }}> No incoming calls to display </p>}
@@ -292,6 +298,8 @@ export default function CallHistory(props) {
                                         incoming={false}
                                         id={data.callDetails.id}
                                         showAlert={props.showAlert}
+                                        voiceCall={data.callDetails.voiceCall}
+                                        answered={data.callDetails.answered}
                                         deleteHistory={deleteHistory}
                                     />
                                 )) : <p className=' text-center' style={{ color: "grey" }}>No outgoing calls to show</p>}

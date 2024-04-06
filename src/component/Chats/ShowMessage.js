@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Avatar, Chip, Divider, Fade, IconButton, MenuItem, Paper, Slide, Tooltip } from '@mui/material';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import Popover from '@mui/material/Popover';
 import userContext from '../../context/User/UserContext'
 import PopupState, { bindTrigger, bindPopover } from 'material-ui-popup-state';
@@ -15,10 +16,6 @@ const ShowMessage = (props) => {
     const [showAnimation, setShowAnimation] = useState(true);
     const [canPerformOps, setCanPerformOps] = useState(true);
     const [isMessageVisible, setIsMessageVisible] = useState(true);
-
-    useEffect(() => {
-        console.log("Message : ",message);
-    },[]);
 
     useEffect(() => {
         convertAndFormatTime(message.timeStamp);
@@ -240,10 +237,13 @@ const ShowMessage = (props) => {
                                             message.edited ?
                                                 <p style={{ alignItems: "right", display: "flex", justifyContent: "right", fontSize: 12 }}>
                                                     {message.forwarded ? <Chip size='12px' color='success' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip> : <></>} Edited &nbsp;<AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    &nbsp;
+                                                    <TaskAltIcon sx={{ color: "blue",fontSize: 15 }} />
                                                 </p>
                                                 :
                                                 <p style={{ alignItems: "right", display: "flex", justifyContent: "right", fontSize: 12 }}>
                                                     {message.forwarded ? <Chip size = '12px' color='success' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip> : <></>} <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    &nbsp;<TaskAltIcon sx={{ color: "blue", fontSize: 15 }} />
                                                 </p>
                                         }
 
@@ -255,10 +255,12 @@ const ShowMessage = (props) => {
                                             message.edited ?
                                                 <p style={{ alignItems: "left", display: "flex", justifyContent: "left", fontSize: 12 }}>
                                                     {message.forwarded ? <Chip size='12px' color='success' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip>: <></>} Edited &nbsp; <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    &nbsp;<TaskAltIcon sx={{ color: "blue", fontSize: 15 }} />
                                                 </p>
                                                 :
                                                 <p style={{ alignItems: "left", display: "flex", justifyContent: "left", fontSize: 12 }}>
                                                     {message.forwarded ? <Chip size='12px' color='success' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip> : <></>} <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    &nbsp;<TaskAltIcon sx={{ color: "blue", fontSize: 15 }} />
                                                 </p>
                                         }
                                     </Slide>
@@ -373,10 +375,12 @@ const ShowMessage = (props) => {
                                             message.edited ?
                                                 <p style={{ alignItems: "right", display: "flex", justifyContent: "right", fontSize: 12 }}>
                                                     {message.forwarded ? <Chip color='success' size='12px' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip> : <></>} Edited &nbsp;<AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    &nbsp;<TaskAltIcon sx={{ color: "blue", fontSize: 15 }} />
                                                 </p>
                                                 :
                                                 <p style={{ alignItems: "right", display: "flex", justifyContent: "right", fontSize: 12 }}>
                                                     {message.forwarded ? <Chip color='success' size='12px' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip> : <></>} <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    &nbsp;<TaskAltIcon sx={{ color: "blue", fontSize: 15 }} />
                                                 </p>
                                         }
                                     </Fade>
@@ -387,10 +391,12 @@ const ShowMessage = (props) => {
                                             message.edited ?
                                                 <p style={{ alignItems: "left", display: "flex", justifyContent: "left", fontSize: 12 }}>
                                                     {message.forwarded ? <Chip color='success' size='12px' label={"Forwarded"} sx={{fontSize:12}}></Chip> : <></>} Edited &nbsp; <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    &nbsp;<TaskAltIcon sx={{ color: "blue", fontSize: 15 }} />
                                                 </p>
                                                 :
                                                 <p style={{ alignItems: "left", display: "flex", justifyContent: "left", fontSize: 12 }}>
                                                     {message.forwarded ? <Chip color='success' size='12px' label={"Forwarded"} sx={{ fontSize: 12 }}></Chip> : <></>} <AccessTimeIcon sx={{ fontSize: 17 }} />{time}
+                                                    &nbsp;<TaskAltIcon sx={{ color: "blue", fontSize: 15 }} />
                                                 </p>
                                         }
                                     </Fade>

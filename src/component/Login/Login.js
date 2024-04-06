@@ -7,10 +7,10 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const Login = (props) => {
     const context = useContext(userContext);
-    const {login} = context;
+    const { login } = context;
     const [credentials, setCredentials] = useState({
-        emailAddress: "priyal.shah@gmail.com",
-        password: "Priyal@12345"
+        emailAddress: "",
+        password: ""
     });
     let navigate = useNavigate();
     const handleLogin = async () => {
@@ -35,6 +35,12 @@ const Login = (props) => {
         // e.preventDefault();
         setCredentials({ ...credentials, [e.target.name]: e.target.value })
     }
+
+    const handleKeyPress = (event) => {
+        if (event.key === 'Enter' ) {
+            handleLogin();
+        }
+    }
     return (
         <div className="container text-center" style={{ height: '87vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <Box
@@ -42,9 +48,9 @@ const Login = (props) => {
                 component="form"
                 sx={{
                     '& .MuiTextField-root': { m: 1, width: '25ch' },
-                    border: '1px solid #000', // Add border styling
-                    borderRadius: '10px',     // Add border radius for rounded corners
-                    padding: '20px',          // Add padding for space inside the box
+                    border: '1px solid #000',
+                    borderRadius: '10px', 
+                    padding: '20px',
                 }}
                 noValidate
                 autoComplete="off"
@@ -66,6 +72,7 @@ const Login = (props) => {
                         name="emailAddress"
                         required={true}
                         value={credentials.emailAddress}
+                        onKeyPress={handleKeyPress}
                         onChange={handleChange}
                     />
                     <TextField
@@ -76,6 +83,7 @@ const Login = (props) => {
                         name="password"
                         autoComplete="current-password"
                         value={credentials.password}
+                        onKeyPress={handleKeyPress}
                         onChange={handleChange}
                     />        
 
@@ -96,4 +104,4 @@ const Login = (props) => {
     )
 }
 
-export default Login
+export default Login;

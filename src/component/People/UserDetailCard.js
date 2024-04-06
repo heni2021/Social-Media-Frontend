@@ -14,6 +14,7 @@ import Tooltip from '@mui/material/Tooltip';
 import { useNavigate } from 'react-router-dom';
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
 import userContext from '../../context/User/UserContext';
+import CallIcon from '@mui/icons-material/Call';
 
 export default function UserDetailCard(props) {
     const status = props.status.toLowerCase();
@@ -25,7 +26,7 @@ export default function UserDetailCard(props) {
     const navigate = useNavigate();
 
     const context = useContext(userContext);
-    const { convertTime, user, setChatId } = context;
+    const { convertTime, user, setChatId, setReceiverDetails, fetchUserDetails, startCall, setRoomId, startVoiceCall } = context;
 
     const showProfile = () => {
         localStorage.setItem('userId', props.userId);
@@ -69,6 +70,24 @@ export default function UserDetailCard(props) {
         }
     }
 
+    const startVideoCall = () => {
+        const name = props.firstName + " " + props.lastName;
+        localStorage.setItem("Name",name);
+        startAVideoCall(props.userId, user[0]?.id);
+    }
+
+    const startAVideoCall = async(receiverId, senderId) => {
+        const response = await startCall(senderId, receiverId);
+        const data = await response.json();
+        if(data.success){
+            await setRoomId(data.message);
+            navigate("/videoCall");
+        }
+        else{
+            props.showAlert(data.message, "danger");
+        }
+    }
+
     const openChatSettings = () => {
         generateChatId(props.userId, user[0]?.id);
         navigate("/viewChats");
@@ -78,6 +97,30 @@ export default function UserDetailCard(props) {
         const id = sortedIds.join('_');
         await setChatId(id);
     }
+    const voiceCallStart = () => {
+        const name = props.firstName+" "+props.lastName;
+        localStorage.setItem("Caller Name", name);
+        startAVoiceCall(props.userId, user[0]?.id);
+    }
+    const startAVoiceCall = async(receiverId, senderId) => {
+        const response = await startVoiceCall(senderId, receiverId);
+        const data = await response.json();
+        if(data.success){
+            await setRoomId(data.roomId);
+            const receiver = await fetchData(data.receiverId);
+            await setReceiverDetails(receiver);
+            navigate("/voice/call");
+        }
+        else{
+            props.showAlert(data.message, "danger");
+        }
+    }
+
+    const fetchData = async (id) => {
+        const userDetailPromise = await fetchUserDetails(id);
+        const userDetail = await userDetailPromise.json();
+        return userDetail;
+    };
 
     return (
         <div className='col-md-3 my-2 mx-3'>
@@ -164,8 +207,13 @@ export default function UserDetailCard(props) {
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="Start a video call">
-                            <IconButton aria-label="video call">
+                            <IconButton aria-label="video call" onClick={startVideoCall}>
                                 <VideocamIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Start a voice call">
+                            <IconButton aria-label="voice call" onClick={voiceCallStart}>
+                                <CallIcon />
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="View Profile">

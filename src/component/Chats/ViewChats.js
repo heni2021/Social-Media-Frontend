@@ -1,4 +1,4 @@
-import { Avatar, Card, CardActions, CardContent, CardHeader, Chip, Divider, Grid, IconButton, LinearProgress, Paper, TextField, Tooltip } from '@mui/material';
+import { Avatar, Card, CardContent, CardHeader, Chip, Grid, IconButton, Paper, TextField, Tooltip } from '@mui/material';
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import FaceIcon from '@mui/icons-material/Face';
@@ -8,7 +8,7 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ShowMessage from './ShowMessage';
 import { closeWebSocket, initializeWebSocket } from '../WebSocketService';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
-import { set } from 'date-fns';
+
 
 const ViewChats = (props) => {
   const { setProgress, progress, showProgress, showAlert } = props;
@@ -442,21 +442,11 @@ const ViewChats = (props) => {
                   .slice()
                   .sort((a, b) => a.timeStamp - b.timeStamp)
                   .map((msg, index) => {
-                    // if (index === dividerIndex) {
-                    //   return (
-                    //     <>
-                    //     <Divider />
-                    //     <ShowMessage receiver={receiver} newMsg={newMessage} performEditting={performEditting} showAlert={showAlert} key={index} message={msg} formatTime={formatTime} />
-                    //     </>
-                    //   )
-                    // }
-                    // else {
                       return (
                         <ShowMessage receiver={receiver} newMsg={newMessage} performEditting={performEditting} showAlert={showAlert} key={index} message={msg} formatTime={formatTime} />
                       )
                     // }
                   })}
-
               </>
             }
           </Paper>
