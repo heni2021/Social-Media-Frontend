@@ -39,7 +39,7 @@ const AcceptVoiceCall = (props) => {
     return () => {
       stompClientChat && stompClientChat.deactivate();
     }
-  }, []);
+  }, [isConnectionEstablished]);
 
   useEffect(() => {
     requestAudioPermission();
@@ -59,16 +59,12 @@ const AcceptVoiceCall = (props) => {
     let sc = Stomp.over(socket);
     setStompClientChat(sc);
     const brokerUrl = process.env.REACT_APP_WEBSOCKET_URL;
-    // const receivedMessageIds = new Set(); // Set to store received message IDs
     sc.configure({
       brokerURL: brokerUrl,
       onConnect: async () => {
         sc.subscribe(url, async (response) => {
           const receivedResponse = await JSON.parse(response.body);
-          // if (!receivedMessageIds.has(receivedResponse.id)) { // Check if message ID is unique
             await setChats((prevChats) => [...prevChats, receivedResponse]);
-            // receivedMessageIds.add(receivedResponse.id); // Add message ID to the set
-          // }
         });
       },
       onStompError: (error) => {

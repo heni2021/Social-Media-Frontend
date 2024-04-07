@@ -12,7 +12,6 @@ const HomePage = (props) => {
   const { getUserDetails, getAllByFollowing, user, downloadPost,fetchUserDetails, convertTime, likePost, dislikePost, isLiked, setUpWebSocket, startVoiceCallUrl, stompClient, setRoomId, setReceiverDetails, roomId, setChats } = context;
   const [posts, setPosts] = useState({});
   const [userPostCredentials, setUserPostCredentials] = useState([]);
-  // const [isExecuted, setIsExecuted] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,15 +70,15 @@ const HomePage = (props) => {
   }
 
   const fetchUserData = async () => {
-    setProgress(40);
+    // setProgress(40);
     await getUserDetails()
       .then(async () => {
-        setProgress(50);
+        // setProgress(50);
         await getPosts();
-        setProgress(80);
+        // setProgress(80);
       })
       .then(async () => {
-        setProgress(95);
+        // setProgress(95);
         await configureWebSocket();
       })
       .catch(error => console.error('Error fetching user details:', error));
