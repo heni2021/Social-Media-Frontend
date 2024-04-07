@@ -155,7 +155,7 @@ const CallDetailIncomingCard = (props) => {
                                         <CallMadeIcon sx={{color: "green"}}/>}
                                         &nbsp;{endTime !== null ? formattedStartTime : answered ? formattedStartTime + " Ongoing" : formattedStartTime +" Ringing..."}
                                     <br />
-                                    {answered ? (
+                                    {/* {answered ? (
                                         <>
                                             <HistoryRoundedIcon /> &nbsp;
                                             {endTime !== null ? (
@@ -171,7 +171,7 @@ const CallDetailIncomingCard = (props) => {
                                     ) : (
                                         <>
                                         </>
-                                    )}
+                                    )} */}
                                 </>
                             }
 
