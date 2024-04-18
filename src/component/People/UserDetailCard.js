@@ -77,10 +77,12 @@ export default function UserDetailCard(props) {
     }
 
     const startAVideoCall = async(receiverId, senderId) => {
-        const response = await startCall(senderId, receiverId);
+        const response = await startCall(senderId, receiverId, "false");
         const data = await response.json();
         if(data.success){
-            await setRoomId(data.message);
+            await setRoomId(data.roomId);
+            const receiver = await fetchData(data.receiverId);
+            await setReceiverDetails(receiver);
             navigate("/videoCall");
         }
         else{

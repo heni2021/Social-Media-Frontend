@@ -14,7 +14,7 @@ import './motion.css';
 
 const AcceptVoiceCall = (props) => {
   const context = useContext(userContext);
-  const { roomId, endVoiceCall, receiverDetails, setRoomId, setReceiverDetails, user, setChats, setUpWebSocket, chats } = context;
+  const { roomId, endVoiceCall, receiverDetails, setRoomId, setReceiverDetails, user, setChats, isOtherPersonMuted, updateMuteStatus,chats } = context;
   const navigate = useNavigate();
   const [imageUrl, setImageUrl] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -64,7 +64,7 @@ const AcceptVoiceCall = (props) => {
       onConnect: async () => {
         sc.subscribe(url, async (response) => {
           const receivedResponse = await JSON.parse(response.body);
-            await setChats((prevChats) => [...prevChats, receivedResponse]);
+          await setChats((prevChats) => [...prevChats, receivedResponse]);
         });
       },
       onStompError: (error) => {
@@ -204,8 +204,19 @@ const AcceptVoiceCall = (props) => {
   const initials = receiverDetails.firstName.charAt(0).toUpperCase() + receiverDetails.lastName.charAt(0).toUpperCase();
 
   const switchBetweenMuteAndUnMute = () => {
-    setIsMuted(!isMuted);
+    if (isMuted) {
+      updateMuteStatus(receiverDetails.id, "false").
+        then(() => {
+          setIsMuted(false);
+        });
+    } else {
+      updateMuteStatus(receiverDetails.id, "true").
+        then(() => {
+          setIsMuted(true);
+        });
+    }
   };
+
 
   const startChatting = () => {
     setChatOpen(!isChatOpen);
@@ -255,6 +266,11 @@ const AcceptVoiceCall = (props) => {
         }
         <p style={{ color: 'black', fontSize: '24px', fontWeight: 'bolder' }}>
           {receiverDetails.firstName + " " + receiverDetails.lastName}
+        </p>
+        <p>
+          {isOtherPersonMuted? <p style={{color: 'grey', fontSize: '24px', fontWeight: 'bolder'}}>
+            Muted
+          </p> : <></>}
         </p>
       </div>
 

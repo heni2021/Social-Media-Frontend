@@ -53,7 +53,7 @@ const IncomingVoiceCall = (props) => {
     const response = await answerVoiceCall(userId, roomId);
     const data = await response.json();
     if(data.success){
-      navigate("/voice/call/receive");
+      navigate(`/voice/call/receive`);
     }
     else{
       props.showAlert(data.message, "danger");

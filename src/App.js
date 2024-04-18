@@ -28,6 +28,8 @@ import VideoCall from './component/Video Call/VideoCall';
 import OutgoingVoiceCall from './component/Voice Call/OutgoingVoiceCall';
 import IncomingVoiceCall from './component/Voice Call/IncomingVoiceCall';
 import AcceptVoiceCall from './component/Voice Call/AcceptVoiceCall';
+import IncomingVideoCall from './component/Video Call/IncomingVideoCall';
+import AcceptVideoCall from './component/Video Call/AcceptVideoCall';
 
 function App() {
   const theme = createTheme(); // for material Ui
@@ -36,6 +38,7 @@ function App() {
   const [alert, setAlert] = useState(null);
   const [progress, setProgress] = useState(0);
   const [showProgress, setShowProgress] = useState(true);
+  const[currentRoomId,setCurrentRoomId] = useState("default");
 
   useEffect(() => {
     if (progress === 100) {
@@ -63,7 +66,7 @@ function App() {
           <Routes>
             <Route path='/login' element={<Login showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
             <Route path='/signup' element={<SignUp showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
-            <Route path='/home' element={<HomePage showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
+            <Route path='/home' element={<HomePage setCurrentRoomId={setCurrentRoomId} showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
             <Route path='/resetPassword' element={<ResetPassword showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
             <Route index element={<Navigate to='/login' />} />
             <Route path='/people' element={<User showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
@@ -79,9 +82,11 @@ function App() {
             <Route path='/viewChats' element={<ViewChats showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
             <Route path='/search' element={<Search showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
             <Route path='/videoCall' element={<VideoCall showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
-            <Route path='/voice/call' element={<OutgoingVoiceCall showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
-            <Route path='/voice/call/incoming' element={<IncomingVoiceCall showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
-            <Route path='/voice/call/receive' element={<AcceptVoiceCall showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
+            <Route exact path='/video/call/incoming' element={<IncomingVideoCall showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
+            <Route exact path={`/video/call/receive`} element={<AcceptVideoCall showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
+            <Route exact path='/voice/call' element={<OutgoingVoiceCall showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
+            <Route exact path='/voice/call/incoming' element={<IncomingVoiceCall showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
+            <Route exact path={`/voice/call/receive`} element={<AcceptVoiceCall showAlert={showAlertMessage} setProgress={setProgress} progress={progress} showProgress={showProgress} />} />
           </Routes>
         </ThemeProvider>
       </Router>

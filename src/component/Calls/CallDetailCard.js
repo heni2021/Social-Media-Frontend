@@ -3,7 +3,7 @@ import { useContext, useEffect, useState } from 'react';
 import userContext from '../../context/User/UserContext';
 import CallReceivedIcon from '@mui/icons-material/CallReceived';
 import CallMadeIcon from '@mui/icons-material/CallMade';
-import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded'; 
+import VideocamIcon from '@mui/icons-material/Videocam'; 
 import DeleteIcon from '@mui/icons-material/Delete';
 import PhoneIcon from '@mui/icons-material/Phone';
 import RingVolumeIcon from '@mui/icons-material/RingVolume';
@@ -184,10 +184,15 @@ const CallDetailIncomingCard = (props) => {
                                     <DeleteIcon sx={{ fontSize: 30 }} />
                                 </IconButton>
                             </Tooltip>
-                            {voiceCall && 
+                            {voiceCall ?
                             <Tooltip title='Voice Call'>
                                 <IconButton>
                                     <PhoneIcon sx={{fontSize: 30}} />
+                                </IconButton>
+                            </Tooltip> : 
+                            <Tooltip title='Video Call'>
+                                <IconButton>
+                                    <VideocamIcon sx={{fontSize: 30}} />
                                 </IconButton>
                             </Tooltip>
                             }

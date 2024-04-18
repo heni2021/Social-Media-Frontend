@@ -5,13 +5,16 @@ import { useNavigate } from 'react-router-dom';
 import PostCard from './Posts/PostCard';
 import { Button, LinearProgress } from '@mui/material';
 import ArrowCircleRightRoundedIcon from '@mui/icons-material/ArrowCircleRightRounded';
+import SockJS from 'sockjs-client';
+import { Stomp } from '@stomp/stompjs';
 
 const HomePage = (props) => {
-  const { showProgress, progress, setProgress } = props;
+  const { showProgress, progress, setProgress, setCurrentRoomId } = props;
   const context = useContext(userContext);
-  const { getUserDetails, getAllByFollowing, user, downloadPost,fetchUserDetails, convertTime, likePost, dislikePost, isLiked, setUpWebSocket, startVoiceCallUrl, stompClient, setRoomId, setReceiverDetails, roomId, setChats } = context;
+  const { getUserDetails, getAllByFollowing, user, downloadPost, fetchUserDetails, convertTime, likePost, dislikePost, isLiked, setIsOtherPersonVideoOn, startVoiceCallUrl, setRoomId, setReceiverDetails, roomId, setChats, setIsOtherPersonMuted, endCallUrl, startCallUrl, answerCallUrl } = context;
   const [posts, setPosts] = useState({});
   const [userPostCredentials, setUserPostCredentials] = useState([]);
+  const[stompClient, setStompClient] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,10 +24,11 @@ const HomePage = (props) => {
       setProgress(100);
       // setIsExecuted(true);
     // }
-    return () => {
-      closeWebSocket();
-    };
   },[]);
+
+  useEffect(() => {
+    configureWebSocket();
+  }, [user]);
 
   useEffect(() => {
     // setProgress(89);
@@ -42,30 +46,84 @@ const HomePage = (props) => {
   const configureWebSocket = async () => {
     if (user) {
       const url = `${startVoiceCallUrl}/${user[0]?.id}`;
-      await setUpWebSocket(url, async (response) => {
-        const receivedResponse = JSON.parse(response.body);
-        if (receivedResponse.success && roomId === "default" && receivedResponse.message === "Calling") {
-          await setRoomId(receivedResponse.roomId);
-          if (receivedResponse.receiverId !== user[0]?.id) {
-            const receiver = await fetchData(receivedResponse.receiverId);
-            await setReceiverDetails(receiver);
-          }
-          else {
-            const receiver = await fetchData(receivedResponse.callerId);
-            await setReceiverDetails(receiver);
-          }
-        }
-        if (receivedResponse.success && receivedResponse.message === "Calling") {
-          navigate("/voice/call/incoming");
-        }
-        if (receivedResponse.success && receivedResponse.message === "Answering") {
-          navigate("/voice/call/receive");
-        }
-        if (receivedResponse.success && receivedResponse.message === 'Ended') {
-          await setChats([]);
-          navigate("/people");
-        }
+      const videoCallUrl = `${process.env.REACT_APP_VIDEO_CALL_SUBSCRIBE}/${user[0]?.id}`;
+      const socket = new SockJS(`${process.env.REACT_APP_SOCKJS_URL}`);
+      let sc = Stomp.over(socket);
+      setStompClient(sc);
+      const brokerUrl = process.env.REACT_APP_WEBSOCKET_URL;
+      sc.configure({
+        brokerURL: brokerUrl,
+        onConnect: async () => {
+          sc.subscribe(url, async (response) => {
+            const receivedResponse = JSON.parse(response.body);
+              if (receivedResponse.success && roomId === "default" && receivedResponse.message === "Calling") {
+                await setRoomId(receivedResponse.roomId);
+                await setCurrentRoomId(receivedResponse.roomId);
+                if (receivedResponse.receiverId !== user[0]?.id) {
+                  const receiver = await fetchData(receivedResponse.receiverId);
+                  await setReceiverDetails(receiver);
+                }
+                else {
+                  const receiver = await fetchData(receivedResponse.callerId);
+                  await setReceiverDetails(receiver);
+                }
+              }
+              if (receivedResponse.success && receivedResponse.message === "Calling") {
+                navigate("/voice/call/incoming");
+              }
+              if (receivedResponse.success && receivedResponse.message === "Answering") {
+                navigate(`/voice/call/receive`);
+              }
+              if (receivedResponse.success && receivedResponse.message === 'Ended') {
+                await setChats([]);
+                navigate("/people");
+              }
+              if (receivedResponse.message === 'true' || receivedResponse.message === 'false') {
+                await setIsOtherPersonMuted(receivedResponse.message === 'true');
+              }
+          });
+
+          sc.subscribe(videoCallUrl, async(response) => {
+            const receivedResponse = JSON.parse(response.body);
+              if(receivedResponse.success){
+                if (roomId === 'default' && receivedResponse.message ==='Calling'){
+                  await setRoomId(receivedResponse.roomId);
+                  await setCurrentRoomId(receivedResponse.roomId);
+                  if (receivedResponse.receiverId !== user[0]?.id) {
+                    const receiver = await fetchData(receivedResponse.receiverId);
+                    await setReceiverDetails(receiver);
+                  }
+                  else {
+                    const receiver = await fetchData(receivedResponse.callerId);
+                    await setReceiverDetails(receiver);
+                  }
+                }
+                if(receivedResponse.message === 'Calling'){
+                  navigate("/video/call/incoming");
+                }
+                if(receivedResponse.message === 'Ended!'){
+                  await setRoomId("default");
+                  await setCurrentRoomId("default");
+                  await setReceiverDetails({});
+                  navigate("/people");
+                }
+                if(receivedResponse.message==='Answering'){
+                  navigate(`/video/call/receive`);
+                }
+                if(receivedResponse.message==='true' && receivedResponse.message==='false'){
+                  await setIsOtherPersonVideoOn(receivedResponse.message === 'true');
+                }
+              }
+              else{
+                props.showAlert(receivedResponse.message);
+              }
+          });
+        },
+        onStompError: (error) => {
+          console.error('WebSocket error:', error);
+        },
       });
+      sc.activate();
     }
   }
 
@@ -76,10 +134,6 @@ const HomePage = (props) => {
         // setProgress(50);
         await getPosts();
         // setProgress(80);
-      })
-      .then(async () => {
-        // setProgress(95);
-        await configureWebSocket();
       })
       .catch(error => console.error('Error fetching user details:', error));
   }

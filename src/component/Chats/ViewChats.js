@@ -1,13 +1,15 @@
-import { Avatar, Card, CardContent, CardHeader, Chip, Grid, IconButton, Paper, TextField, Tooltip } from '@mui/material';
+import { Avatar, Card, CardContent, CardHeader, Chip, Grid, IconButton, Paper, TextField, Tooltip, MenuItem } from '@mui/material';
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import FaceIcon from '@mui/icons-material/Face';
 import userContext from '../../context/User/UserContext';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import PopupState, { bindTrigger, bindPopover } from 'material-ui-popup-state'; 
 import ShowMessage from './ShowMessage';
 import { closeWebSocket, initializeWebSocket } from '../WebSocketService';
-import ClearAllIcon from '@mui/icons-material/ClearAll';
+import Popover from '@mui/material/Popover';
+import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
+
 
 
 const ViewChats = (props) => {
@@ -224,8 +226,9 @@ const ViewChats = (props) => {
     }
   }
 
-  const goToViewCard = async (event) => {
+  const goToViewCard = async (event,popupState) => {
     event.stopPropagation();
+    popupState.close();
     const response = await updateAccessTime(chatId, sender.id);
     const data = await response.json();
     if (data.success) {
@@ -285,8 +288,9 @@ const ViewChats = (props) => {
   const deleteRefOpen = useRef(null);
   const refCloseDeleteModal = useRef(null);
 
-  const openClearChatModal = (event) => {
+  const openClearChatModal = (event, popupState) => {
     event.stopPropagation();
+    popupState.close();
     deleteRefOpen.current.click();
   }
 
@@ -375,7 +379,7 @@ const ViewChats = (props) => {
                     }
                     action={
                       <>
-                        <Tooltip title="Clear Chats">
+                        {/* <Tooltip title="Clear Chats">
                           <IconButton aria-label='clear chats' sx={{ marginTop: 2, marginRight: 2 }} onClick={openClearChatModal}>
                             <ClearAllIcon fontSize='30' />
                           </IconButton>
@@ -384,7 +388,34 @@ const ViewChats = (props) => {
                           <IconButton onClick={goToViewCard} sx={{ marginTop: 2, marginRight: 2 }}>
                             <CloseRoundedIcon fontSize='30' />
                           </IconButton>
-                        </Tooltip>
+                        </Tooltip> */}
+                        <div style={{ position: 'absolute', top: 70, right: 70, display: 'flex', alignItems: 'center' }}>
+                          <PopupState variant="popover" popupId="demo-popup-popover-options">
+                            {(popupState) => (
+                              <>
+                                <Tooltip title='Open Options'>
+                                  <IconButton variant="contained" onClick={(event) => { event.stopPropagation(); popupState.open() }}>
+                                    <MoreVertRoundedIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Popover
+                                  {...bindPopover(popupState)}
+                                  anchorOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                  }}
+                                  transformOrigin={{
+                                    vertical: 'bottom',
+                                    horizontal: 'right',
+                                  }}
+                                >
+                                  <MenuItem sx={{ cursor: "pointer" }} onClick={(event) => { openClearChatModal(event, popupState) }}>Clear All Messages</MenuItem>
+                                  <MenuItem sx={{ cursor: "pointer" }} onClick={(event) => { goToViewCard(event, popupState) }}>Close Chat</MenuItem>
+                                </Popover>
+                              </>
+                            )}
+                          </PopupState>
+                        </div>
 
                       </>
                     }
@@ -442,9 +473,9 @@ const ViewChats = (props) => {
                   .slice()
                   .sort((a, b) => a.timeStamp - b.timeStamp)
                   .map((msg, index) => {
-                      return (
-                        <ShowMessage receiver={receiver} newMsg={newMessage} performEditting={performEditting} showAlert={showAlert} key={index} message={msg} formatTime={formatTime} />
-                      )
+                    return (
+                      <ShowMessage receiver={receiver} newMsg={newMessage} performEditting={performEditting} showAlert={showAlert} key={index} message={msg} formatTime={formatTime} />
+                    )
                     // }
                   })}
               </>
