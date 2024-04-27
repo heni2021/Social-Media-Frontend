@@ -90,9 +90,20 @@ const UserState = (props) => {
     const endVoiceCallUrl = process.env.REACT_APP_END_VOICE_CALL;
     const muteStatusUrl = process.env.REACT_APP_UPDATE_MUTE_STATUS;
     const videoStatusUrl = process.env.REACT_APP_UPDATE_VIDEO_STATUS;
+    const randomVideoCallUrl = process.env.REACT_APP_PLACE_RANDOM_CALL;
+    
+    const placeRandomVideoCall = async(id) => {
+        const response = await fetch(`${randomVideoCallUrl}/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        return response;
+    }
 
     const updateVideoStatus = async (receiverId, videoStatus) => {
-        const response = await fetch(`${videoStatusUrl}d/${receiverId}/${videoStatus}`, {
+        const response = await fetch(`${videoStatusUrl}/${receiverId}/${videoStatus}`, {
             method: 'POST',
             mode: 'no-cors',
             headers: {
@@ -776,7 +787,7 @@ const UserState = (props) => {
 
     return (
         <UserContext.Provider value={{ 
-            updateVideoStatus,setIsOtherPersonVideoOn, isOtherPersonVideoOn, startCallUrl,endCallUrl, answerCallUrl,setIsOtherPersonMuted, isOtherPersonMuted, updateMuteStatus, setChats, chats,answerVoiceCall, voiceCallUrl, startVoiceCall, startVoiceCallUrl, startVoiceUrl, answerVoiceCallUrl, endVoiceCallUrl, setReceiverDetails, receiverDetails, setRoomId, roomId, startCall, endCall, answerCall, setUpWebSocket, startVideoCallUrl, videoCallUrl, stompClient, setStompClient, countUnreadMsg, updateAccessTime, setMessageId, messageId, forwardMsg, setStatus, status, clearChat, deleteChat, searchUser, deleteMessage, canDeleteMsg, editMessage, deleteMessageForever, convertDateAndTime, getAllChatsById, setChatId, chatId, getChats, getPostById, setPostId, postId, setProfilePhoto, downloadPost, isLiked, likePost, dislikePost, getAllByFollowing, updatePost, deletePost, getAllPost, addPost, peopleRef, friendRef, unfollowFriend, deleteAccount, updateAccount, fetchFollowing, fetchFollowers, isFriend, ignoreFriendRequest, acceptFriendRequest, cancelFriendRequest, user, setUser, fetchOutgoingFriendRequest, fetchIncomingFriendRequest, sendRequest, incomingFriendRequest, outgoingFriendRequest, setIncomingFriendRequest, setOutgoingFriendRequest, clearCallById, clearIncomingCalls, clearOutgoingCallHistory, clearAllCalls, setOutgoingCallHistory, outgoingCallHistory, setCallUserData, convertTime, fetchOutgoingCalls, callUserData, computeDuration, login, signup, callHistory, fetchUserDetails, setCallHistory, fetchIncomingCalls, resetPassword, setUserDetail, logOut, userDetail, fetchOtherFriends, getUserDetails, endVoiceCall
+            placeRandomVideoCall, updateVideoStatus,setIsOtherPersonVideoOn, isOtherPersonVideoOn, startCallUrl,endCallUrl, answerCallUrl,setIsOtherPersonMuted, isOtherPersonMuted, updateMuteStatus, setChats, chats,answerVoiceCall, voiceCallUrl, startVoiceCall, startVoiceCallUrl, startVoiceUrl, answerVoiceCallUrl, endVoiceCallUrl, setReceiverDetails, receiverDetails, setRoomId, roomId, startCall, endCall, answerCall, setUpWebSocket, startVideoCallUrl, videoCallUrl, stompClient, setStompClient, countUnreadMsg, updateAccessTime, setMessageId, messageId, forwardMsg, setStatus, status, clearChat, deleteChat, searchUser, deleteMessage, canDeleteMsg, editMessage, deleteMessageForever, convertDateAndTime, getAllChatsById, setChatId, chatId, getChats, getPostById, setPostId, postId, setProfilePhoto, downloadPost, isLiked, likePost, dislikePost, getAllByFollowing, updatePost, deletePost, getAllPost, addPost, peopleRef, friendRef, unfollowFriend, deleteAccount, updateAccount, fetchFollowing, fetchFollowers, isFriend, ignoreFriendRequest, acceptFriendRequest, cancelFriendRequest, user, setUser, fetchOutgoingFriendRequest, fetchIncomingFriendRequest, sendRequest, incomingFriendRequest, outgoingFriendRequest, setIncomingFriendRequest, setOutgoingFriendRequest, clearCallById, clearIncomingCalls, clearOutgoingCallHistory, clearAllCalls, setOutgoingCallHistory, outgoingCallHistory, setCallUserData, convertTime, fetchOutgoingCalls, callUserData, computeDuration, login, signup, callHistory, fetchUserDetails, setCallHistory, fetchIncomingCalls, resetPassword, setUserDetail, logOut, userDetail, fetchOtherFriends, getUserDetails, endVoiceCall
             }}>
             {props.children}
         </UserContext.Provider>

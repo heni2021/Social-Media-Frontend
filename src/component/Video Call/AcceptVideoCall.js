@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import AgoraRTC from 'agora-rtc-sdk';
 import userContext from '../../context/User/UserContext';
 import { Avatar, IconButton, Tooltip } from '@mui/material';
 import CallChat from '../Voice Call/CallChat';
@@ -11,36 +12,30 @@ import { Stomp } from '@stomp/stompjs';
 import { useNavigate } from 'react-router-dom';
 import videoOn from '../../Photos/videoOn.png';
 import videoOff from '../../Photos/videoOff.png';
-import './AcceptVideoCall.css'; // Import the CSS file with the styles
+import './AcceptVideoCall.css';
+import LocalVideo from './LocalVideo';
+import RemoteVideo from './RemoteVideo';
 
 const AcceptVideoCall = (props) => {
   const context = useContext(userContext);
   const { receiverDetails, user, roomId, isOtherPersonMuted, endCall, setChats, updateMuteStatus, setRoomId, setReceiverDetails, updateVideoStatus, isOtherPersonVideoOn } = context;
   const navigate = useNavigate();
   const [isAudio, setIsAudio] = useState(false);
-  const [localStream, setLocalStream] = useState(null);
   const [callDuration, setCallDuration] = useState(0);
   const [imageUrl, setImageUrl] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [stompClientChat, setStompClientChat] = useState(null);
   const [isChatOpen, setChatOpen] = useState(false);
-  const[isVideoOn , setIsVideoOn] = useState(true);
-  const [peerConnection, setPeerConnection] = useState(null);
+  const [isVideoOn, setIsVideoOn] = useState(true);
   const [isConnectionEstablished, setIsConnectionEstablished] = useState(false);
   const [remoteStream, setRemoteStream] = useState(null);
-  const [stompClient, setStompClient] = useState(null);
-
-  useEffect(() => {
-    if (!isAudio) {
-      requestAudioVideoPermission();
-    }
-  }, []);
+  const [localStream, setLocalStream] = useState(null);
+  const [client, setClient] = useState(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCallDuration((prevDuration) => prevDuration + 1);
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -54,19 +49,73 @@ const AcceptVideoCall = (props) => {
   }, [isConnectionEstablished]);
 
   useEffect(() => {
-    if (isAudio && localStream) {
-      createPeerConnection();
-    }
-  }, [isAudio, localStream]);
+    connectAgoraClient();
+    return () => {
+      if(client){
+      client.leave();
+      client.unpublish(localStream);
+      localStream && localStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
 
   useEffect(() => {
-    if (remoteStream) {
-      const videoElement = document.getElementById('remoteVideo');
-      if (videoElement) {
-        videoElement.srcObject = remoteStream;
-      }
+    fetchProfileSource(receiverDetails.profilePhoto);
+  }, [receiverDetails.profilePhoto]);
+
+  const connectAgoraClient = async() => {
+    const appId = "c1bdc9afcfc745c880375d19a2517658";
+    const channelName = 'live';
+    const token = null; // Set to null for testing, or generate a token for secure communication
+
+    const agoraClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+
+    agoraClient.init(appId, () => {
+      console.log('Client initialized');
+      agoraClient.join(token, channelName, null, async(uid) => {
+        console.log('User ' + uid + ' has joined channel: ' + channelName);
+
+        await navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(async(stream) => {
+          if (stream.getVideoTracks().length > 0) {
+            console.log("Setting local Stream: ", stream);
+            setLocalStream(stream);
+            await agoraClient.publish(stream);
+            console.log('Published local stream');
+          } else {
+            console.error('Error: No video tracks found in the stream');
+          }
+        }).catch((error) => {
+          console.error('Error accessing user media:', error);
+        });
+
+      });
+    });
+
+     agoraClient.on('stream-added', async(evt) => {
+       const remoteStream = evt.stream;
+       console.log("Adding Remote Stream: ",remoteStream);
+      await agoraClient.subscribe(remoteStream);
+      console.log("Addedd!!");
+      setRemoteStream(remoteStream);
+      console.log('Subscribed remote stream');
+    });
+
+    agoraClient.on('stream-subscribed', async(evt) => {
+      const remoteStream = evt.stream;
+      await setRemoteStream(remoteStream);
+      console.log('Received remote stream');
+    });
+
+    await setClient(agoraClient);
+  }
+
+  const fetchProfileSource = (image) => {
+    if (image) {
+      const mimeType = image.startsWith('/9j/') ? 'image/jpeg' : 'image/png';
+      const url = `data:${mimeType};base64,${image}`;
+      setImageUrl(url);
     }
-  }, [remoteStream]);
+  };
 
   const setUpConnectionForChats = async () => {
     const url = `${process.env.REACT_APP_CALL_CHAT_SUBSCRIBE}/${roomId}`;
@@ -89,148 +138,6 @@ const AcceptVideoCall = (props) => {
     sc.activate();
     setIsConnectionEstablished(true);
   }
-
-  useEffect(() => {
-    fetchProfileSource(receiverDetails.profilePhoto);
-  }, [receiverDetails.profilePhoto]);
-
-  const fetchProfileSource = (image) => {
-    if (image) {
-      const mimeType = image.startsWith('/9j/') ? 'image/jpeg' : 'image/png';
-      const url = `data:${mimeType};base64,${image}`;
-      setImageUrl(url);
-    }
-  };
-
-  // Inside useEffect for requesting audio and video permissions
-  const requestAudioVideoPermission = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      console.log("Accessed media devices:", stream);
-      setIsAudio(true);
-      setLocalStream(stream);
-    } catch (error) {
-      setIsAudio(false);
-      console.error("Error accessing media devices:", error);
-      props.showAlert("Error accessing media devices. Please check your camera and microphone permissions.", "danger");
-    }
-  };
-
-  // Inside createPeerConnection function
-  const createPeerConnection = async () => {
-    const socket = new SockJS(`${process.env.REACT_APP_SOCKJS_URL}`);
-    let sc = Stomp.over(socket);
-    setStompClient(sc);
-    const brokerUrl = process.env.REACT_APP_WEBSOCKET_URL;
-    sc.configure({
-      brokerURL: brokerUrl,
-      onConnect: async () => {
-        console.log("WebSocket connected successfully.");
-        var url = '/topic/signaling';
-        sc.subscribe(url, async (response) => {
-          const msg = JSON.parse(response.body);
-          if (msg.type === 'offer') {
-            await handleOffer(msg);
-          } else if (msg.type === 'answer') {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(msg.data));
-          } else if (msg.type === 'candidate') {
-            await peerConnection.addIceCandidate(new RTCIceCandidate(msg.data));
-          }
-        });
-        const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-        const peerConnection = new RTCPeerConnection(configuration);
-
-        peerConnection.ontrack = (event) => {
-          // console.log("Received remote track:", event.track);
-          // const remoteStream = new MediaStream();
-          // remoteStream.addTrack(event.track);
-          setRemoteStream(event.streams[0]);
-        };
-
-        if (localStream) {
-          console.log("Adding local tracks to peer connection:", localStream.getTracks());
-          localStream.getTracks().forEach(track => {
-            peerConnection.addTrack(track, localStream);
-          });
-        } else {
-          console.warn("Local stream is not available.");
-        }
-
-        await peerConnection.createOffer().then(offer => {
-          peerConnection.setLocalDescription(offer);
-          const message = {
-            type: 'offer',
-            sender: user[0]?.id,
-            receiver: receiverDetails.id,
-            data: offer,
-          };
-          sc.publish({ destination: '/app/send', body: JSON.stringify(message) });
-        });
-
-        setPeerConnection(peerConnection);
-
-        // Setup onicecandidate event after peer connection is initialized
-        peerConnection.onicecandidate = (event) => {
-          if (event.candidate) {
-            const message = {
-              type: 'candidate',
-              sender: user[0]?.id,
-              receiver: receiverDetails.id,
-              data: event.candidate,
-            };
-            sc.publish({ destination: '/app/send', body: JSON.stringify(message) });
-          }
-        };
-      },
-      onStompError: (error) => {
-        console.error('WebSocket error:', error);
-      },
-    });
-    sc.activate();
-    setIsConnectionEstablished(true);
-  };
-
-
-  const handleOffer = async (offer) => {
-    const peerConnection = new RTCPeerConnection();
-
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        const message = {
-          type: 'candidate',
-          sender: user[0]?.id,
-          receiver: receiverDetails.id,
-          data: event.candidate,
-        };
-        stompClient.publish({ destination: '/app/send', body: JSON.stringify(message) });
-      }
-    };
-
-    peerConnection.ontrack = (event) => {
-      const remoteStream = new MediaStream();
-      remoteStream.addTrack(event.track);
-      setRemoteStream(remoteStream);
-    };
-
-    if (localStream) {
-      localStream.getTracks().forEach(track => {
-        peerConnection.addTrack(track, localStream);
-      });
-    }
-
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer.data));
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-    const message = {
-      type: 'answer',
-      sender: user[0]?.id,
-      receiver: receiverDetails.id,
-      data: answer,
-    };
-    stompClient.publish({ destination: '/app/send', body: JSON.stringify(message) });
-    setPeerConnection(peerConnection);
-  };
-
 
   const formatTime = (timeInSeconds) => {
     const minutes = Math.floor(timeInSeconds / 60);
@@ -265,7 +172,12 @@ const AcceptVideoCall = (props) => {
     if (data.success) {
       await setRoomId("default");
       await setReceiverDetails({});
-      await setIsAudio(false);
+      setIsAudio(false);
+      if(client){
+        client.leave();
+        client.unpublish(localStream);
+        localStream && localStream.getTracks().forEach((track) => track.stop());
+      }
       props.showAlert("Call ended successfully!", "success");
       navigate("/people");
     }
@@ -277,15 +189,6 @@ const AcceptVideoCall = (props) => {
   const startChatting = () => {
     setChatOpen(!isChatOpen);
   };
-
-  useEffect(() => {
-    if (remoteStream) {
-      const videoElement = document.getElementById('remoteVideo');
-      if (videoElement) {
-        videoElement.srcObject = remoteStream;
-      }
-    }
-  }, [remoteStream]);
 
   const switchVideoStates = () => {
     if (isVideoOn) {
@@ -314,7 +217,6 @@ const AcceptVideoCall = (props) => {
       justifyContent: 'center',
       alignItems: 'center',
     }}>
-
       <div style={{ position: 'absolute', top: 40 }}>
         {
           imageUrl === null ?
@@ -363,14 +265,16 @@ const AcceptVideoCall = (props) => {
             style={{ width: '100%', maxWidth: '200px', marginBottom: '10px' }}
           />
         )}
-        {isOtherPersonVideoOn? remoteStream && (
-          <video id="remoteVideo" autoPlay playsInline className="video"></video>
-        ) : 
-        <div className="camera-off-message" style={{color:'white'}}>
-          <p>The other person's camera is off</p>
-        </div>
+        {isOtherPersonVideoOn ? (
+            <>
+          { client && localStream && <LocalVideo stream={localStream} muted={isMuted} />}
+          {client && remoteStream && <RemoteVideo stream={remoteStream} />}
+            </>
+        ) :
+          <div className="camera-off-message" style={{ color: 'white' }}>
+            <p>The other person's camera is off</p>
+          </div>
         }
-        {/* {console.log("PERMISSION: ", isAudio)} */}
         {isVideoOn ? (
           <Tooltip title='Turn Video off'>
             <IconButton className='mx-2' onClick={switchVideoStates} sx={
@@ -382,39 +286,38 @@ const AcceptVideoCall = (props) => {
             </IconButton>
           </Tooltip>
         ) : (
-            <Tooltip title='Turn Video On'>
-              <IconButton className='mx-2' onClick={switchVideoStates} sx={
-                {
-                  background: 'white'
-                }
-              }>
-                <img src={videoOff} alt='Video Off' style={{ width: 50, height: 50 }} />
-              </IconButton>
-            </Tooltip>
+          <Tooltip title='Turn Video On'>
+            <IconButton className='mx-2' onClick={switchVideoStates} sx={
+              {
+                background: 'white'
+              }
+            }>
+              <img src={videoOff} alt='Video Off' style={{ width: 50, height: 50 }} />
+            </IconButton>
+          </Tooltip>
         )}
-            {isMuted ?
-              <Tooltip title='UnMute'>
-                <IconButton className='mx-2' onClick={switchBetweenMuteAndUnMute} sx={
-                  {
-                    background: 'white'
-                  }
-                }>
-                  <img src={muteMicIcon} alt='Mute Mic' style={{ width: 50, height: 50 }} />
-                </IconButton>
-              </Tooltip>
-              :
-              <Tooltip title='Mute'>
-                <IconButton className='mx-2' onClick={switchBetweenMuteAndUnMute} sx={
-                  {
-                    background: 'white'
-                  }
-                }>
-                  <img src={unMuteMicIcon} alt='UnMute Mic' style={{ width: 50, height: 50 }} />
-                </IconButton>
-              </Tooltip>
-            }
+        {isMuted ?
+          <Tooltip title='UnMute'>
+            <IconButton className='mx-2' onClick={switchBetweenMuteAndUnMute} sx={
+              {
+                background: 'white'
+              }
+            }>
+              <img src={muteMicIcon} alt='Mute Mic' style={{ width: 50, height: 50 }} />
+            </IconButton>
+          </Tooltip>
+          :
+          <Tooltip title='Mute'>
+            <IconButton className='mx-2' onClick={switchBetweenMuteAndUnMute} sx={
+              {
+                background: 'white'
+              }
+            }>
+              <img src={unMuteMicIcon} alt='UnMute Mic' style={{ width: 50, height: 50 }} />
+            </IconButton>
+          </Tooltip>
+        }
 
-        {/* Chat and end call buttons */}
         <Tooltip title='Open Chat Box'>
           <IconButton className='mx-2' onClick={startChatting} sx={
             {
@@ -434,10 +337,10 @@ const AcceptVideoCall = (props) => {
           </IconButton>
         </Tooltip>
       </div>
-
       {isChatOpen && <CallChat />}
     </div>
   );
-}
+};
+
 
 export default AcceptVideoCall;

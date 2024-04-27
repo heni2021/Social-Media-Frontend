@@ -35,7 +35,7 @@ const ShowUserDetails = (props) => {
     return (
         <div className='my-3'>
             <div className=' mx-3 my-3'>
-                <Card sx={{ width: 945, cursor: "pointer" }} onClick={openViewUserInterface}>
+                <Card sx={{ width: 900, cursor: "pointer" }} onClick={openViewUserInterface}>
                     <CardContent>
                         <Grid container alignItems="center">
                             <Grid item xs={10}>

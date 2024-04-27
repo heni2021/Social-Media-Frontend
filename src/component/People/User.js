@@ -1,38 +1,35 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import BottomNavigationBar from '../BottomNavigation';
 import userContext from '../../context/User/UserContext';
 import UserDetailCard from './UserDetailCard';
-import { Box, Button, IconButton, LinearProgress, Tooltip } from '@mui/material';
+import { Box, Button, Divider, FormControl, FormControlLabel, IconButton, LinearProgress, Radio, RadioGroup, TextField, Tooltip, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ArrowCircleRightRoundedIcon from '@mui/icons-material/ArrowCircleRightRounded';
+import LoopIcon from '@mui/icons-material/Loop';
+import VideocamIcon from '@mui/icons-material/Videocam';
+import CallIcon from '@mui/icons-material/Call';
 
 const User = (props) => {
   const { showProgress, progress, setProgress } = props;
   const context = useContext(userContext);
-  const { userDetail, fetchTimeInFormat, fetchOtherFriends, sendRequest, user, setUserDetail, peopleRef } = context;
+  const { userDetail, fetchTimeInFormat, fetchOtherFriends, sendRequest, user, setUserDetail, peopleRef, placeRandomVideoCall, startCall, setRoomId, setReceiverDetails, fetchUserDetails, startVoiceCall } = context;
   const [creationDates, setCreationDates] = useState([]);
+  const [selectedValue, setSelectedValue] = useState('Video Call')
+  const [callee, setCallee] = useState({});
+  const [loading, setLoading] = useState(false); // State to manage loading status
 
   useEffect(() => {
-    // if (userDetail.length > 0) {
-      peopleRef.current.click();
-    // }
-    // else {
-      // navigate("/login");
-    // }
+    peopleRef.current.click();
   }, []);
 
   useEffect(() => {
-    // if (userDetail.length>0) {
-      fetchDataForUsers();
-    // }
-    // else {
-      // navigate("/login");
-    // }
+    fetchDataForUsers();
   }, [userDetail]);
+
   const fetchDataForUsers = async () => {
     try {
       setProgress(20);
-      const dates = await Promise.allSettled(  // Use Promise.allSettled to handle both fulfilled and rejected promises
+      const dates = await Promise.allSettled(
         userDetail.map(async (userData) => {
           try {
             return { id: userData.id, time: userData.creationDate };
@@ -44,7 +41,6 @@ const User = (props) => {
       );
       setProgress(30);
 
-      // Use the functional form of setCreationDates to ensure correct state updates
       setCreationDates(
         dates
           .filter((result) => result.status === "fulfilled")
@@ -92,14 +88,136 @@ const User = (props) => {
     navigate("/search");
   }
 
+  const openModalRef = useRef(null);
+  const closeModalRef = useRef(null);
+
+  const openModelForGeneratingRandomId = () => {
+    setCallee({});
+    openModalRef.current.click();
+  }
+
+  const handleCallTypeChange = (event) => {
+    setSelectedValue(event.target.value);
+  }
+
+  const generateRandomCalleee = async (event) => {
+    event.stopPropagation();
+    setLoading(true); // Start loading
+    const response = await placeRandomVideoCall(user[0]?.id);
+    const data = await response.json();
+    if (data) {
+      setCallee(data);
+    }
+    setLoading(false); // Stop loading
+  }
+
+  const startVideoCall = async() => {
+    await closeModalRef.current.click();
+    const userName = callee.firstName + " " + callee.lastName;
+    localStorage.setItem("Name", userName);
+    const response = await startCall(user[0]?.id, callee.id, "false");
+    const data = await response.json();
+    if (data.success) {
+      await setRoomId(data.roomId);
+      await setReceiverDetails(callee);
+      navigate("/videoCall");
+    }
+    else {
+      props.showAlert(data.message, "danger");
+    }
+  }
+
+  const startAVoiceCall = async () => {
+    await closeModalRef.current.click();
+    const callerName = callee.firstName + " " + callee.lastName;
+    localStorage.setItem("Caller Name", callerName);
+    const response = await startVoiceCall(user[0]?.id, callee.id);
+    const data = await response.json();
+    if (data.success) {
+      await setRoomId(data.roomId);
+      await setReceiverDetails(callee);
+      navigate("/voice/call");
+    }
+    else {
+      props.showAlert(data.message, "danger");
+    }
+  }
+  const name = user[0]?.firstName + " " + user[0]?.lastName;
   return (
     <>
       <BottomNavigationBar showAlert={props.showAlert} value={"people"} />
       {showProgress && <LinearProgress variant="determinate" value={progress} sx={{ color: "red" }} />}
-      {userDetail.length>0 ? <div className="container my-3 text-center">
+      {userDetail.length > 0 ? <div className="container my-3 text-center">
         <h1> Recommendations
         </h1>
       </div> : <></>}
+
+      <button ref={openModalRef} hidden type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generateRandomVideoID">
+        Launch demo modal
+      </button>
+      <Button sx={{ position: 'absolute', top: 136, right: 5 }} variant='outlined' color='primary' onClick={openModelForGeneratingRandomId} endIcon={<LoopIcon />} >Place a Random Call</Button>
+      <div class="modal fade" id="generateRandomVideoID" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Place Random Call</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <Divider />
+              <div className='text-center'>
+                <FormControl>
+                  <RadioGroup row
+                    aria-labelledby="demo-row-radio-buttons-group-label"
+                    name="row-radio-buttons-group"
+                    onChange={handleCallTypeChange}
+                    value={selectedValue}>
+                    <FormControlLabel value='Video Call' control={<Radio />} label='Video Call' />
+                    <FormControlLabel value='Voice Call' control={<Radio />} label='Voice Call' />
+                  </RadioGroup>
+                </FormControl>
+              </div>
+              <Divider />
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <TextField
+                  className='my-3'
+                  id="outlined-required"
+                  label="Your Name"
+                  name="userName"
+                  value={name}
+                  InputProps={{
+                    readOnly: true
+                  }}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', marginLeft: 10 }}>
+                  {selectedValue === 'Video Call' ? <VideocamIcon className='my-3' style={{ fontSize: 40 }} /> : <CallIcon className='my-3' style={{ fontSize: 40 }} />}
+                </div>
+                <TextField
+                  className='mx-2 my-3'
+                  id="outlined-required"
+                  label="Callee Name"
+                  name="calleeName"
+                  value={loading ? 'Loading...' : callee.userName ? callee.firstName + " " + callee.lastName : " "}
+                  InputProps={{
+                    readOnly: true
+                  }}
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button hidden ref={closeModalRef} type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" onClick={generateRandomCalleee}>Find A Random Callee</button>
+              {selectedValue==='Video Call' ? 
+              
+              <button disabled={callee.userName? false: true} type="button" class="btn btn-primary" onClick={startVideoCall}>Start a Video Call</button>
+            :
+                <button disabled={callee.userName ? false : true} type="button" class="btn btn-primary" onClick={startAVoiceCall}>Start a Voice Call</button>
+            }
+            </div>
+          </div>
+        </div>
+      </div>
       {userDetail.length > 0 ? !showProgress && <Box
         component="form"
         sx={{

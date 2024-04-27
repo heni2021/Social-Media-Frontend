@@ -84,7 +84,7 @@ const HomePage = (props) => {
           });
 
           sc.subscribe(videoCallUrl, async(response) => {
-            const receivedResponse = JSON.parse(response.body);
+            const receivedResponse = await JSON.parse(response.body);
               if(receivedResponse.success){
                 if (roomId === 'default' && receivedResponse.message ==='Calling'){
                   await setRoomId(receivedResponse.roomId);
@@ -111,6 +111,7 @@ const HomePage = (props) => {
                   navigate(`/video/call/receive`);
                 }
                 if(receivedResponse.message==='true' && receivedResponse.message==='false'){
+                  console.log("SETTING: ", receivedResponse.message === 'true')
                   await setIsOtherPersonVideoOn(receivedResponse.message === 'true');
                 }
               }
