@@ -5,7 +5,6 @@ import endCallIcon from '../../Photos/endCallIcon.jpg';
 import unMuteMicIcon from '../../Photos/unmuteMic.png';
 import muteMicIcon from '../../Photos/muteMic.png';
 import chatIcon from '../../Photos/chatIcon.png';
-import MessageRoundedIcon from '@mui/icons-material/MessageRounded';
 import { Avatar, IconButton, Tooltip } from '@mui/material';
 import CallChat from './CallChat';
 import SockJS from 'sockjs-client';

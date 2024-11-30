@@ -16,6 +16,7 @@ const User = (props) => {
   const [creationDates, setCreationDates] = useState([]);
   const [selectedValue, setSelectedValue] = useState('Video Call')
   const [callee, setCallee] = useState({});
+  const [isFirstClick, setIsFirstClick] = useState(false);
   const [loading, setLoading] = useState(false); // State to manage loading status
 
   useEffect(() => {
@@ -93,6 +94,7 @@ const User = (props) => {
 
   const openModelForGeneratingRandomId = () => {
     setCallee({});
+    setLoading(false);
     openModalRef.current.click();
   }
 
@@ -102,10 +104,13 @@ const User = (props) => {
 
   const generateRandomCalleee = async (event) => {
     event.stopPropagation();
+    setIsFirstClick(true);
     setLoading(true); // Start loading
     const response = await placeRandomVideoCall(user[0]?.id);
+    console.log(response);
     const data = await response.json();
-    if (data) {
+    // console.log("DATA : ",data);
+    if (data!==null) {
       setCallee(data);
     }
     setLoading(false); // Stop loading
@@ -161,7 +166,10 @@ const User = (props) => {
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title" id="exampleModalLabel">Place Random Call</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={() => {
+                setIsFirstClick(false)
+                setCallee({});
+              }}></button>
             </div>
             <div class="modal-body">
               <Divider />
@@ -198,7 +206,7 @@ const User = (props) => {
                   id="outlined-required"
                   label="Callee Name"
                   name="calleeName"
-                  value={loading ? 'Loading...' : callee.userName ? callee.firstName + " " + callee.lastName : " "}
+                  value={!isFirstClick? "Press Find a Random Callee": loading ? 'Loading...' : callee.userName ? callee.firstName + " " + callee.lastName : "No User is online! "}
                   InputProps={{
                     readOnly: true
                   }}

@@ -1,7 +1,7 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
 import Login from './component/Login/Login';
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import Alert from './component/Alert';
 import UserState from './context/User/UserState';
 import SignUp from './component/Login/SignUp';

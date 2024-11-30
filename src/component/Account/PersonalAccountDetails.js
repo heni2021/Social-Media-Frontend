@@ -2,7 +2,6 @@ import React, { useContext } from 'react'
 import userContext from '../../context/User/UserContext';
 import BottomNavigationBar from '../BottomNavigation';
 import PersonalProfile from './PersonalProfile';
-import { LinearProgress } from '@mui/material';
 
 const PersonalAccountDetails = (props) => {
     const{showAlert, setProgress, showProgress, progress} = props;

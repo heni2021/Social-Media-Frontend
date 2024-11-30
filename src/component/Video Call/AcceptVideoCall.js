@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useState } from 'react';
-import AgoraRTC from 'agora-rtc-sdk';
 import userContext from '../../context/User/UserContext';
 import { Avatar, IconButton, Tooltip } from '@mui/material';
 import CallChat from '../Voice Call/CallChat';
@@ -13,29 +12,35 @@ import { useNavigate } from 'react-router-dom';
 import videoOn from '../../Photos/videoOn.png';
 import videoOff from '../../Photos/videoOff.png';
 import './AcceptVideoCall.css';
-import LocalVideo from './LocalVideo';
-import RemoteVideo from './RemoteVideo';
 
-const AcceptVideoCall = (props) => {
+const AcceptVideoCall = () => {
   const context = useContext(userContext);
   const { receiverDetails, user, roomId, isOtherPersonMuted, endCall, setChats, updateMuteStatus, setRoomId, setReceiverDetails, updateVideoStatus, isOtherPersonVideoOn } = context;
   const navigate = useNavigate();
   const [isAudio, setIsAudio] = useState(false);
+  const [localStream, setLocalStream] = useState(null);
   const [callDuration, setCallDuration] = useState(0);
   const [imageUrl, setImageUrl] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [stompClientChat, setStompClientChat] = useState(null);
   const [isChatOpen, setChatOpen] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(true);
+  const [peerConnection, setPeerConnection] = useState(null);
   const [isConnectionEstablished, setIsConnectionEstablished] = useState(false);
   const [remoteStream, setRemoteStream] = useState(null);
-  const [localStream, setLocalStream] = useState(null);
-  const [client, setClient] = useState(null);
+  const [stompClient, setStompClient] = useState(null);
+
+  useEffect(() => {
+    // if (!isAudio) {
+      requestAudioVideoPermission();
+    // }
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCallDuration((prevDuration) => prevDuration + 1);
+      setCallDuration(prevDuration => prevDuration + 1);
     }, 1000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -45,77 +50,23 @@ const AcceptVideoCall = (props) => {
     }
     return () => {
       stompClientChat && stompClientChat.deactivate();
-    }
+    };
   }, [isConnectionEstablished]);
 
   useEffect(() => {
-    connectAgoraClient();
-    return () => {
-      if(client){
-      client.leave();
-      client.unpublish(localStream);
-      localStream && localStream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, []);
+    if (isAudio && localStream) {
+      createPeerConnection();
+    }
+  }, [isAudio, localStream]);
 
   useEffect(() => {
-    fetchProfileSource(receiverDetails.profilePhoto);
-  }, [receiverDetails.profilePhoto]);
-
-  const connectAgoraClient = async() => {
-    const appId = "c1bdc9afcfc745c880375d19a2517658";
-    const channelName = 'live';
-    const token = null; // Set to null for testing, or generate a token for secure communication
-
-    const agoraClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
-
-    agoraClient.init(appId, () => {
-      console.log('Client initialized');
-      agoraClient.join(token, channelName, null, async(uid) => {
-        console.log('User ' + uid + ' has joined channel: ' + channelName);
-
-        await navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(async(stream) => {
-          if (stream.getVideoTracks().length > 0) {
-            console.log("Setting local Stream: ", stream);
-            setLocalStream(stream);
-            await agoraClient.publish(stream);
-            console.log('Published local stream');
-          } else {
-            console.error('Error: No video tracks found in the stream');
-          }
-        }).catch((error) => {
-          console.error('Error accessing user media:', error);
-        });
-
-      });
-    });
-
-     agoraClient.on('stream-added', async(evt) => {
-       const remoteStream = evt.stream;
-       console.log("Adding Remote Stream: ",remoteStream);
-      await agoraClient.subscribe(remoteStream);
-      console.log("Addedd!!");
-      setRemoteStream(remoteStream);
-      console.log('Subscribed remote stream');
-    });
-
-    agoraClient.on('stream-subscribed', async(evt) => {
-      const remoteStream = evt.stream;
-      await setRemoteStream(remoteStream);
-      console.log('Received remote stream');
-    });
-
-    await setClient(agoraClient);
-  }
-
-  const fetchProfileSource = (image) => {
-    if (image) {
-      const mimeType = image.startsWith('/9j/') ? 'image/jpeg' : 'image/png';
-      const url = `data:${mimeType};base64,${image}`;
-      setImageUrl(url);
+    if (remoteStream) {
+      const videoElement = document.getElementById('remoteVideo');
+      if (videoElement) {
+        videoElement.srcObject = remoteStream;
+      }
     }
-  };
+  }, [remoteStream]);
 
   const setUpConnectionForChats = async () => {
     const url = `${process.env.REACT_APP_CALL_CHAT_SUBSCRIBE}/${roomId}`;
@@ -126,18 +77,154 @@ const AcceptVideoCall = (props) => {
     sc.configure({
       brokerURL: brokerUrl,
       onConnect: async () => {
-        sc.subscribe(url, async (response) => {
+        sc.subscribe(url, async response => {
           const receivedResponse = await JSON.parse(response.body);
-          await setChats((prevChats) => [...prevChats, receivedResponse]);
+          await setChats(prevChats => [...prevChats, receivedResponse]);
         });
       },
-      onStompError: (error) => {
+      onStompError: error => {
         console.error('WebSocket error:', error);
-      },
+      }
     });
     sc.activate();
     setIsConnectionEstablished(true);
-  }
+  };
+
+  useEffect(() => {
+    fetchProfileSource(receiverDetails.profilePhoto);
+  }, [receiverDetails.profilePhoto]);
+
+  const fetchProfileSource = image => {
+    if (image) {
+      const mimeType = image.startsWith('/9j/') ? 'image/jpeg' : 'image/png';
+      const url = `data:${mimeType};base64,${image}`;
+      setImageUrl(url);
+    }
+  };
+
+  const requestAudioVideoPermission = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      console.log("Accessed media devices:", stream);
+      setIsAudio(true);
+      setLocalStream(stream);
+      setRemoteStream(stream);
+    } catch (error) {
+      setIsAudio(false);
+      console.error("Error accessing media devices:", error);
+    }
+  };
+
+  const createPeerConnection = async () => {
+    const socket = new SockJS(`${process.env.REACT_APP_SOCKJS_URL}`);
+    let sc = Stomp.over(socket);
+    setStompClient(sc);
+    const brokerUrl = process.env.REACT_APP_WEBSOCKET_URL;
+    sc.configure({
+      brokerURL: brokerUrl,
+      onConnect: async () => {
+        console.log("WebSocket connected successfully.");
+        var url = '/topic/signaling/' + user[0]?.id;
+        sc.subscribe(url, async response => {
+          const msg = JSON.parse(response.body);
+          if (msg.type === 'offer') {
+            await handleOffer(msg);
+          } else if (msg.type === 'answer') {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(msg.data));
+          } else if (msg.type === 'candidate') {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(msg.data));
+          }
+        });
+        const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+        const peerConnection = new RTCPeerConnection(configuration);
+
+        peerConnection.ontrack = event => {
+          setRemoteStream(event.streams[0]);
+        };
+
+        if (localStream) {
+          localStream.getTracks().forEach(track => {
+            peerConnection.addTrack(track, localStream);
+          });
+        } else {
+          console.warn("Local stream is not available.");
+        }
+
+        await peerConnection.createOffer().then(offer => {
+          peerConnection.setLocalDescription(offer);
+          const message = {
+            type: 'offer',
+            sender: user[0]?.id,
+            receiver: receiverDetails.id,
+            data: offer
+          };
+          sc.publish({ destination: '/app/send', body: JSON.stringify(message) });
+        });
+
+        setPeerConnection(peerConnection);
+
+        peerConnection.onicecandidate = event => {
+          if (event.candidate) {
+            const message = {
+              type: 'candidate',
+              sender: user[0]?.id,
+              receiver: receiverDetails.id,
+              data: event.candidate
+            };
+            sc.publish({ destination: '/app/send', body: JSON.stringify(message) });
+          }
+        };
+      },
+      onStompError: error => {
+        console.error('WebSocket error:', error);
+      }
+    });
+    sc.activate();
+    setIsConnectionEstablished(true);
+  };
+
+  const handleOffer = async (offer) => {
+    const peerConnection = new RTCPeerConnection();
+
+    peerConnection.onicecandidate = (event) => {
+      if (event.candidate) {
+        const message = {
+          type: 'candidate',
+          sender: user[0]?.id,
+          receiver: receiverDetails.id,
+          data: event.candidate
+        };
+        stompClient.publish({ destination: '/app/send', body: JSON.stringify(message) });
+      }
+    };
+
+    peerConnection.ontrack = (event) => {
+      setRemoteStream(event.streams[0]);
+      if (remoteStream) {
+        remoteStream.getTracks().forEach(track => {
+          peerConnection.addTrack(track, remoteStream);
+        });
+      }
+    };
+
+    if (localStream) {
+      localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, localStream);
+      });
+    }
+
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer.data));
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    const message = {
+      type: 'answer',
+      sender: user[0]?.id,
+      receiver: receiverDetails.id,
+      data: answer
+    };
+    stompClient.publish({ destination: '/app/send', body: JSON.stringify(message) });
+    setPeerConnection(peerConnection);
+  };
 
   const formatTime = (timeInSeconds) => {
     const minutes = Math.floor(timeInSeconds / 60);
@@ -149,13 +236,13 @@ const AcceptVideoCall = (props) => {
 
   const switchBetweenMuteAndUnMute = () => {
     if (isMuted) {
-      updateMuteStatus(receiverDetails.id, "false").
-        then(() => {
+      updateMuteStatus(receiverDetails.id, "false")
+        .then(() => {
           setIsMuted(false);
         });
     } else {
-      updateMuteStatus(receiverDetails.id, "true").
-        then(() => {
+      updateMuteStatus(receiverDetails.id, "true")
+        .then(() => {
           setIsMuted(true);
         });
     }
@@ -173,16 +260,10 @@ const AcceptVideoCall = (props) => {
       await setRoomId("default");
       await setReceiverDetails({});
       setIsAudio(false);
-      if(client){
-        client.leave();
-        client.unpublish(localStream);
-        localStream && localStream.getTracks().forEach((track) => track.stop());
-      }
-      props.showAlert("Call ended successfully!", "success");
+      // Handle success
       navigate("/people");
-    }
-    else {
-      props.showAlert(data.message, "danger");
+    } else {
+      // Handle failure
     }
   };
 
@@ -192,17 +273,17 @@ const AcceptVideoCall = (props) => {
 
   const switchVideoStates = () => {
     if (isVideoOn) {
-      updateVideoStatus(receiverDetails.id, "false").
-        then(() => {
+      updateVideoStatus(receiverDetails.id, "false")
+        .then(() => {
           setIsVideoOn(false);
         });
     } else {
-      updateVideoStatus(receiverDetails.id, "true").
-        then(() => {
+      updateVideoStatus(receiverDetails.id, "true")
+        .then(() => {
           setIsVideoOn(true);
         });
     }
-  }
+  };
 
   return (
     <div style={{
@@ -217,6 +298,7 @@ const AcceptVideoCall = (props) => {
       justifyContent: 'center',
       alignItems: 'center',
     }}>
+
       <div style={{ position: 'absolute', top: 40 }}>
         {
           imageUrl === null ?
@@ -254,7 +336,7 @@ const AcceptVideoCall = (props) => {
       <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)' }}>
         {isAudio && localStream && !isMuted && (
           <audio
-            ref={(audioRef) => {
+            ref={audioRef => {
               if (audioRef && audioRef.srcObject !== localStream) {
                 audioRef.srcObject = localStream;
               }
@@ -265,16 +347,14 @@ const AcceptVideoCall = (props) => {
             style={{ width: '100%', maxWidth: '200px', marginBottom: '10px' }}
           />
         )}
-        {isOtherPersonVideoOn ? (
-            <>
-          { client && localStream && <LocalVideo stream={localStream} muted={isMuted} />}
-          {client && remoteStream && <RemoteVideo stream={remoteStream} />}
-            </>
+        {isOtherPersonVideoOn ? remoteStream && (
+          <video id="remoteVideo" autoPlay playsInline className="video"></video>
         ) :
           <div className="camera-off-message" style={{ color: 'white' }}>
             <p>The other person's camera is off</p>
           </div>
         }
+
         {isVideoOn ? (
           <Tooltip title='Turn Video off'>
             <IconButton className='mx-2' onClick={switchVideoStates} sx={
@@ -337,10 +417,10 @@ const AcceptVideoCall = (props) => {
           </IconButton>
         </Tooltip>
       </div>
+
       {isChatOpen && <CallChat />}
     </div>
   );
-};
-
+}
 
 export default AcceptVideoCall;

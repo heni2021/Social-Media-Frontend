@@ -2,11 +2,15 @@ import React, { useEffect } from 'react';
 
 const LocalVideo = ({ stream, muted }) => {
     useEffect(() => {
+        if (!stream) {
+            return;
+        }
         const videoTrack = stream && stream.getVideoTracks()[0];
         const videoElement = document.getElementById('localVideo');
         if (videoElement && videoTrack) {
             videoElement.srcObject = stream;
         }
+        
         return () => {
             if (videoElement) {
                 videoElement.srcObject = null;

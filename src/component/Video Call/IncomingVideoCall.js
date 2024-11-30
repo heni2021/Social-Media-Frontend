@@ -18,10 +18,25 @@ const IncomingVideoCall = (props) => {
         fetchProfileSource(receiverDetails.profilePhoto);
     }, [receiverDetails.profilePhoto]);
 
+    useEffect(() => {
+        requestVideoPermission();
+    },[]);
     const endCallAndReturn = () => {
         endCallOnly(receiverDetails, user);
         console.log("Call ended!");
     }
+
+    const requestVideoPermission = async () => {
+        try {
+            await navigator.mediaDevices.getUserMedia({ video: true });
+            console.log("Video permission granted!");
+        } catch (error) {
+            // setIsVideoPermissionGranted(false);
+            console.error("Error accessing video:", error);
+            props.showAlert("Error accessing video. Please check your camera permissions.", "danger");
+        }
+    }
+
 
     const endCallOnly = async (receiverDetails, user) => {
         const response = await endCall(user[0]?.id, receiverDetails.id);
